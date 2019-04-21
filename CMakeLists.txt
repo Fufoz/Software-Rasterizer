@@ -11,9 +11,9 @@ endif()
 
 
 add_executable(soft
-    main.cpp
-    vec.cpp
-    obj.cpp
+    main.cc
+    vec.cc
+    obj.cc
 )
 
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})

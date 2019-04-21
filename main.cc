@@ -168,12 +168,12 @@ static void drawTriangleHalfSpace(SDL_Surface* surface, Vertex v0, Vertex v1, Ve
                     int texutreOffset = texture.width * std::floor(Ty * texture.height) * 3 + std::floor(Tx * texture.width) * 3;
                     uint8_t* position = texture.data + texutreOffset;
                     Color tcol = {};
-                   // tcol.r = position[0] * color.r;
-                   // tcol.g = position[1] * color.g;
-                   // tcol.b = position[2] * color.b;
-                    tcol.r = color.r * 255;
-                    tcol.g = color.g * 255;
-                    tcol.b = color.b * 255;
+                    tcol.r = position[0] * color.r;
+                    tcol.g = position[1] * color.g;
+                    tcol.b = position[2] * color.b;
+                   // tcol.r = color.r * 255;
+                   //tcol.g = color.g * 255;
+                   //tcol.b = color.b * 255;
 
                     tcol.a = 255;
                     drawPixel(surface, x, y, tcol);
@@ -286,9 +286,9 @@ int main(int argc, char **argv)
 
             Vertex screenCoords[3];
 
-            screenCoords[0].pos.xyz = vertices.first  * viewMatrix * simplePerspective(vertices.first ) * viewportTransform; //simplePerspective(vertices.first ) * viewportTransform;//simplePerspective(vertices.first )
-            screenCoords[1].pos.xyz = vertices.second * viewMatrix * simplePerspective(vertices.second) * viewportTransform; //simplePerspective(vertices.second) * viewportTransform;//simplePerspective(vertices.second)
-            screenCoords[2].pos.xyz = vertices.third  * viewMatrix * simplePerspective(vertices.third ) * viewportTransform; //simplePerspective(vertices.third ) * viewportTransform;//simplePerspective(vertices.third )
+            screenCoords[0].pos.xyz = vertices.first  * viewMatrix * perspective * viewportTransform; //simplePerspective(vertices.first ) * viewportTransform;//simplePerspective(vertices.first )
+            screenCoords[1].pos.xyz = vertices.second * viewMatrix * perspective * viewportTransform; //simplePerspective(vertices.second) * viewportTransform;//simplePerspective(vertices.second)
+            screenCoords[2].pos.xyz = vertices.third  * viewMatrix * perspective * viewportTransform; //simplePerspective(vertices.third ) * viewportTransform;//simplePerspective(vertices.third )
 
             screenCoords[0].texCoords = verTextureCoords.first; 
             screenCoords[1].texCoords = verTextureCoords.second; 
