@@ -31,7 +31,7 @@ bool Running = false;
 std::vector<float> zBuffer;
 Texture texture = {};
 
-void drawPixel(SDL_Surface* surface, int x, int y, Color color)
+static void drawPixel(SDL_Surface* surface, int x, int y, Color color)
 {
     assert(x < surface->w && y < surface->h);
     assert(x >= 0 && y >= 0);
@@ -46,7 +46,7 @@ void drawPixel(SDL_Surface* surface, int x, int y, Color color)
 
 
 
-void drawLine(SDL_Surface* surface, int x0, int y0, int x1, int y1, Color color)
+static void drawLine(SDL_Surface* surface, int x0, int y0, int x1, int y1, Color color)
 {
     bool steep = false;
     if(std::abs(x1 - x0) < std::abs(y1 - y0)) {
@@ -81,14 +81,9 @@ void drawLine(SDL_Surface* surface, int x0, int y0, int x1, int y1, Color color)
 }
 
 
-float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
+static float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
 {
     return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x  - v0.x) * (v1.y - v0.y); 
-}
-
-bool isTopLeftEdge(Vec3 v1, Vec3 v2)
-{           //left edge                     //top edge
-    return v2.y - v1.y < 0 || (v2.x - v1.x < 0 && v2.y - v1.y == 0);
 }
 
 static void drawWireFrame(SDL_Surface* surface, Vec3 v0, Vec3 v1, Vec3 v2, Color color)
@@ -99,11 +94,6 @@ static void drawWireFrame(SDL_Surface* surface, Vec3 v0, Vec3 v1, Vec3 v2, Color
     drawLine(surface, v0.x, v0.y, v1.x, v1.y, color);
     drawLine(surface, v1.x, v1.y, v2.x, v2.y, color);
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
-}
-
-bool inside(int top, int left, int right, int bot,int x, int y)
-{
-    return x >=left && x <=right && y >= bot && y <= top;
 }
 
 static void drawTriangleHalfSpace(SDL_Surface* surface, Vertex v0, Vertex v1, Vertex v2, Color color)
@@ -200,6 +190,7 @@ int main(int argc, char **argv)
   	SDL_Init(SDL_INIT_VIDEO);
     int width = 640;
     int height = 480;
+
   	SDL_Window *window = SDL_CreateWindow(
   	  "SDL2Test",
   	  SDL_WINDOWPOS_UNDEFINED,
@@ -211,7 +202,7 @@ int main(int argc, char **argv)
 
     int twidth;
     int theight;
-    int numChannels;    
+    int numChannels;
     stbi_set_flip_vertically_on_load(1);
     uint8_t* data = stbi_load("./african_head_diffuse.tga",&twidth, &theight, &numChannels, STBI_rgb);
     uint8_t* temp = data;
@@ -232,7 +223,9 @@ int main(int argc, char **argv)
     Timer fpsTimer;
 
     ObjModel model;
-    load("head.obj", model);
+    if(!load("cube.obj", model))
+        return -1;
+    
     fpsTimer.start();
     
     zBuffer.resize(surface->w * surface->h);
@@ -240,7 +233,6 @@ int main(int argc, char **argv)
 
     Vec3 translate =  {surface->w/2, surface->h/2, 0};
     Vec3 scale = {surface->w/2, surface->h/2, 1};
-    
 
     const float aspectRatio = width / (float)height;
     mat4x4 viewMatrix = lookAt(Vec3{0 , 0, 1}, Vec3{0, 0, 0}, Vec3{0, 1, 0});
@@ -277,7 +269,7 @@ int main(int argc, char **argv)
         mx = (float)-1.f*(x / (surface->w / 2.f) - 1.f);
         my = (float)(y / (surface->h / 2.f) - 1.f);
 
-        
+
 //        Vec3 lightDir = {mx + 1, my + 1, -1.f};
         Vec3 lightDir = {mx, my, -1.f};
         for(uint32_t i = 0; i < model.faces.size(); i++) {
@@ -295,8 +287,8 @@ int main(int argc, char **argv)
             screenCoords[2].texCoords = verTextureCoords.third; 
 
             uint8_t c = i;
-            Vec3 firstEdge = subVec3(vertices.third, vertices.first);
-            Vec3 secondEdge = subVec3(vertices.second, vertices.first);
+            Vec3 firstEdge = vertices.third - vertices.first;
+            Vec3 secondEdge = vertices.second - vertices.first;
             Vec3 faceNormal = cross(firstEdge, secondEdge);
 
             faceNormal = normaliseVec3(faceNormal);

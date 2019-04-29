@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 3.6)
 
 project(soft)
-if(SDL_ROOT)
-    set(SDL_INCLUDE_DIRS ${SDL_ROOT}/include)
-    set(SDL_DEBUG_LIBS "${SDL_ROOT}/lib/SDL2maind.lib;${SDL_ROOT}/lib/SDL2-staticd.lib" )
-    #set(SDL_DEBUG_LIBS "${SDL_ROOT}/lib/SDL2d.lib" )
-else()
-    message(FATAL_ERROR "set SDL_ROOT install directory!")
+
+if(NOT SDL_ROOT)
+    message(FATAL "SDL wasn't found")
 endif()
 
+set(SDL_INCLUDE_DIRS ${SDL_ROOT}/include)
+set(SDL_IMPORT_LIBRARY ${SDL_ROOT}/lib/SDL2d.lib ${SDL_ROOT}/lib/SDL2maind.lib)
+set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)
 
 add_executable(soft
     main.cc
-    vec.cc
     obj.cc
 )
 
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})
-target_link_libraries(soft  user32;gdi32;winmm;imm32;ole32;oleaut32;version;uuid;advapi32;shell32;dinput8 ${SDL_DEBUG_LIBS})
+target_link_libraries(soft ${SDL_IMPORT_LIBRARY})
 
-message("includedirs are ${SDL_INCLUDE_DIRS} libs: ${SDL_ROOT}/lib/SDL2maind.lib ${SDL_DEBUG_LIBS}" )
 install(TARGETS soft RUNTIME DESTINATION ./)
+install(FILES ${SDL_RUNTIME} DESTINATION ./)

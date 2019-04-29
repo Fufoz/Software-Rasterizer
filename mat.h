@@ -48,7 +48,6 @@ inline mat4x4 simplePerspective(Vec3 v)
         0, 0, 1, 0,
         0, 0, 0, 1
     };
-
 }
 
 inline mat4x4 setProjectionMatrix(float angleOfView, float near, float far, float aspectRatio) 
@@ -62,8 +61,24 @@ inline mat4x4 setProjectionMatrix(float angleOfView, float near, float far, floa
         0,    0,     - 2 * far * near / (far - near), 0
     };
 
+//    return mat4x4 {
+//        1, 0    , 0,                0,
+//        0    , 1, 0,                              0,
+//        0,    0,     1,  1/4.f,
+//        0,    0,     0, 0
+//    };
+
 }
 
+inline mat4x4 simplePerspective1(Vec3 v)
+{
+    return mat4x4 {
+        1.f, 0, 0, 0,
+        0, 1.f, 0, 0,
+        0, 0, 1.f, 1.f-v.z/4.f,
+        0, 0, 0, 0
+    };
+}
 
 inline mat4x4 transpose(const mat4x4& in)
 {
@@ -106,9 +121,10 @@ inline mat4x4 operator*(const mat4x4& left, const mat4x4& right)
 inline Vec4 operator*(const Vec4& left, const mat4x4& right)
 {
     Vec4 out = {};
-    out.x = left.x * right.p[0] + left.y * right.p[4] + left.z * right.p[8] + right.p[12];
-    out.y = left.x * right.p[1] + left.y * right.p[5] + left.z * right.p[9] + right.p[13];
-    out.z = left.x * right.p[2] + left.y * right.p[6] + left.z * right.p[10] + right.p[14];
+    out.x = left.x * right.p[0] + left.y * right.p[4] + left.z * right.p[8] +  left.w * right.p[12];
+    out.y = left.x * right.p[1] + left.y * right.p[5] + left.z * right.p[9] +  left.w * right.p[13];
+    out.z = left.x * right.p[2] + left.y * right.p[6] + left.z * right.p[10] + left.w * right.p[14];
+    out.w = left.x * right.p[3] + left.y * right.p[7] + left.z * right.p[11] + left.w * right.p[15];
     float w = left.x * right.p[3] + left.y * right.p[7] + left.z * right.p[11] + right.p[15];
     if(w != 1) {
         out.x /= w;
@@ -126,6 +142,7 @@ inline Vec3 operator*(const Vec3& left, const mat4x4& right)
     return out.xyz;
 }
 
+
 inline void logMat4x4(const mat4x4& in)
 {
     for(uint8_t i = 0; i < 4; i++) {
@@ -138,14 +155,14 @@ inline void logMat4x4(const mat4x4& in)
 
 mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir)
 {
-    Vec3 Z  = normaliseVec3(subVec3(cameraPos, thing));
+    Vec3 Z  = normaliseVec3(cameraPos - thing);
     Vec3 At = cross(normaliseVec3(UpDir),Z);
     Vec3 Up = cross(Z, At);
 
     mat4x4 rotationPart = {
-        At.x, Up.x, Z.x, 0,
-        At.y, Up.y, Z.y, 0,
-        At.z, Up.z, Z.z, 0,
+        At.x, Up.x, -Z.x, 0,
+        At.y, Up.y, -Z.y, 0,
+        At.z, Up.z, -Z.z, 0,
         0,    0,    0,   1
     };
     mat4x4 translationPart  = loadIdentity();

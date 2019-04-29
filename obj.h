@@ -19,7 +19,6 @@ struct Face
     size_t nIndex[3];
 };
 
-//quick and dirty '.obj' mesh loader
 struct ObjModel
 {
     std::vector<Face> faces;

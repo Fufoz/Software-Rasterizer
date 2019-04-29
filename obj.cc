@@ -1,5 +1,39 @@
 #include "obj.h"
 
+static inline bool isVertexCoordinates(const char* buffer)
+{
+    return buffer[0] == 'v' && buffer[1] == ' ';
+}
+
+static inline bool isTextureCoordinates(const char* buffer)
+{
+    return buffer[0] == 'v' && buffer[1] == 't';
+}
+
+static inline bool isVertexNormals(const char* buffer)
+{
+    return buffer[0] == 'v' && buffer[1] == 'n';
+}
+
+static inline bool isFaces(const char* buffer)
+{
+    return buffer[0] == 'f' && buffer[1] == ' '; 
+}
+
+static float parceFloat(char** buffer)
+{
+    char* buff = *buffer;
+    int buffOffset = 0;
+    while(buff[buffOffset] && buff[buffOffset] != ' ') {
+        buffOffset++;
+    }
+    buff[buffOffset] = '\0';
+    float value = atof(buff);
+    *buffer += buffOffset + 1;//offset to next float
+    return value;
+}
+
+
 bool load(const char* model, ObjModel& data)
 {
     FILE* mesh = fopen(model, "rb");
@@ -14,112 +48,88 @@ bool load(const char* model, ObjModel& data)
     Vec3 textCoord = {};
     Vec3 normals = {};
 
-    char buff[256];
-    
-    while(true) {
-        int err = fscanf(mesh, "%s",buff);
-        if(err == EOF)
-            break;
-        if(!strcmp(buff,"v")) {
+    enum {BUFFSIZE = 256};
+    char buff[BUFFSIZE];
+int err;    
+    while(fgets(buff, BUFFSIZE, mesh) != NULL) {
 
-            err = fscanf(mesh, "%f %f %f",
-                &vertexPosition.x, &vertexPosition.y, &vertexPosition.z);
-            if(err != 3) {
-                printf("PARSE ERROR: failed to read vertex position!\n");
-                return false;
-            }
+        if(isVertexCoordinates(buff)) {
+            char* local = buff + 2;//skip whitespace and v tag
+
+            float x = parceFloat(&local);
+            float y = parceFloat(&local);
+            float z = parceFloat(&local);
+
+            vertexPosition.x = x;
+            vertexPosition.y = y;
+            vertexPosition.z = z;
+ 
             data.vertPos.push_back(vertexPosition);
+            printf("v %f %f %f\n",x,y,z);
+        
+        }else if(isTextureCoordinates(buff)){
+            char* local = buff + 3;//skip whitespace and vt tag
 
-        }else if(!strcmp(buff,"vt")){
-            
-            err = fscanf(mesh, "%f %f %f",
-                &textCoord.x, &textCoord.y, &textCoord.z);
-            if(err != 3) {
-                printf("PARSE ERROR: failed to read texture Coord position!\n");
-                return false;
-            }
+            float u = parceFloat(&local);
+            float v = parceFloat(&local);
+            float w = parceFloat(&local);
+
+            textCoord.u = u;
+            textCoord.v = v;
+            textCoord.z = w;
+
             data.texCoord.push_back(textCoord);
+            printf("vt %f %f %f\n", u, v, w);
 
-        }else if(!strcmp(buff,"vn")){
-            
-            err = fscanf(mesh, "%f %f %f",
-                &normals.x, &normals.y, &normals.z);
-            if(err != 3) {
-                printf("PARSE ERROR: failed to read normals position!\n");
-                return false;
-            }
+        }else if(isVertexNormals(buff)){
+            char* local = buff + 3;//skip whitespace and vn tag
+
+            float x = parceFloat(&local);
+            float y = parceFloat(&local);
+            float z = parceFloat(&local);
+
+            normals.x = x;
+            normals.y = y;
+            normals.z = z;
+
             data.normals.push_back(normals);
+            printf("vn %f %f %f\n", x, y, z);
             
-        }else if(!strcmp(buff,"f")) {
+        }else if(isFaces(buff)) {
             Face face = {};
-            int vertexIndex1 = 0;
-            int vertexIndex2 = 0;
-            int vertexIndex3 = 0;
+            char* local = buff + 2;//skip whitespace and f tag
+            enum {
+                VERT_ONLY = 0,// v
+                VERT_TEXT, // v/vt
+                VERT_NORM,// v//vn
+                VERT_TEXT_NORM // v/vt/vn
+            };
+
+            //determine pattern
+            uint8_t currIdx = 0;
+            uint8_t firstSlashPos = -1;
+            uint8_t secondSlashPos = -1;
+            uint8_t thirdSlashPos = -1;
+
+            uint8_t numSlashes = 0;
+            bool twoSlashes = false;
             
-            int textureCoord1 = 0;
-            int textureCoord2 = 0;
-            int textureCoord3 = 0;
+            while(local[currIdx] && local[currIdx] != ' ') {
+                if(local[currIdx] == '/') {
+                    local[currIdx] = '\0';
+                    int value = std::atoi(local);
+                    printf("ASD\n");
+                }
+                currIdx++;
+            }
             
-            int normals1 = 0;
-            int normals2 = 0;
-            int normals3 = 0;
-            
-            err = fscanf(mesh, "%d/%d/%d %d/%d/%d %d/%d/%d",
-            &vertexIndex1, &textureCoord1, &normals1,
-            &vertexIndex2, &textureCoord2, &normals2,
-            &vertexIndex3, &textureCoord3, &normals3);
-            if(err == 9) {
-                face.vIndex[0] = vertexIndex1;
-                face.vIndex[1] = vertexIndex2;
-                face.vIndex[2] = vertexIndex3;
-
-                face.tIndex[0] = textureCoord1;
-                face.tIndex[1] = textureCoord2;
-                face.tIndex[2] = textureCoord3;
-
-                face.nIndex[0] = normals1;
-                face.nIndex[1] = normals2;
-                face.nIndex[2] = normals3;
-
-                data.faces.push_back(face);
-                continue;
-            }
-
-            err = fscanf(mesh, "%d//%d %d//%d %d//%d",
-            &vertexIndex1, &normals1,
-            &vertexIndex2, &normals2,
-            &vertexIndex3, &normals3);
-            if(err == 6) {
-                face.vIndex[0] = vertexIndex1;
-                face.vIndex[1] = vertexIndex2;
-                face.vIndex[2] = vertexIndex3;
-                                
-                face.nIndex[0] = normals1;
-                face.nIndex[1] = normals2;
-                face.nIndex[2] = normals3;
-
-                data.faces.push_back(face);
-                continue;
-            }
-
-            err = fscanf(mesh, "%d %d %d",
-            &vertexIndex1, &vertexIndex2, &vertexIndex3);
-            if(err == 3) {
-                face.vIndex[0] = vertexIndex1;
-                face.vIndex[1] = vertexIndex2;
-                face.vIndex[2] = vertexIndex3;
-
-                data.faces.push_back(face);
-                continue;
-            }
-            printf("PARSE ERROR: FAILED TO PARSE FACES!\n");
-            return false;
         }
     }
 
     printf("MESH INFO:\n Faces = %d\n VertexPositions = %d\n Normals = %d\n Texture Coords = %d\n",
     data.faces.size(), data.vertPos.size(), data.normals.size(), data.texCoord.size());
-
+    
+    fclose(mesh);
     return true;
 }
 
