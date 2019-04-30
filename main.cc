@@ -255,7 +255,7 @@ int main(int argc, char **argv)
         SDL_FillRect(surface, NULL, SDL_MapRGBA(surface->format, 0, 0, 0, 255));
 
         std::fill(zBuffer.begin(), zBuffer.end(), -std::numeric_limits<float>::max());
-        if(surface->w != width || surface->h != height){
+        if(surface->w != width || surface->h != height) {
             zBuffer.resize(surface->w * surface->h);
             std::fill(zBuffer.begin(), zBuffer.end(), -std::numeric_limits<float>::max());
             width = surface->w;

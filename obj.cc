@@ -33,6 +33,72 @@ static float parceFloat(char** buffer)
     return value;
 }
 
+enum FacePattern {
+    PATTERN_VERT_ONLY = 0,// v
+    PATTERN_VERT_TEXT, // v/vt
+    PATTERN_VERT_NORM,// v//vn
+    PATTERN_VERT_TEXT_NORM, // v/vt/vn
+    PATTERN_UNKNOWN
+};
+
+static Face parseFace(FacePattern pattern, char** buffer)
+{
+    Face face = {};
+    char* buff = *buffer;
+
+    int values[3] = {};
+    uint8_t currIdx = 0;
+    uint8_t valueIdx = 0;
+    
+    while(buff[currIdx] && buff[currIdx] != ' ')
+    {
+        if(buff[currIdx] == '/') {
+            buff[currIdx] = '\0';
+            values[valueIdx] = atof(buff);
+            buff += currIdx;
+            valueIdx++;
+        }
+        currIdx++;
+    }
+
+//    switch(pattern) {
+//        case PATTERN_VERT_ONLY :
+//            face
+//    }
+}
+
+static FacePattern checkFacePattern(const char* faceString)
+{
+    FacePattern pattern = PATTERN_UNKNOWN;
+
+    //determine pattern
+    uint8_t currIdx = 0;
+    uint8_t numSlashes = 0;
+
+    while(faceString[currIdx] != ' ') {
+        if(faceString[currIdx] == '/') {
+            numSlashes++;
+            if(faceString[currIdx + 1] == '/') {
+                numSlashes++;
+                pattern = PATTERN_VERT_NORM;
+                break;
+            }
+        }
+        currIdx++;
+    }
+
+    if(numSlashes == 0)
+        pattern = PATTERN_VERT_ONLY;
+    else if(numSlashes == 1)
+        pattern = PATTERN_VERT_TEXT;
+    else if(numSlashes == 2)
+        pattern = PATTERN_VERT_TEXT_NORM;
+    else
+        pattern = PATTERN_UNKNOWN;
+    
+    printf("pattern is %d\n",pattern);
+    return pattern;
+}
 
 bool load(const char* model, ObjModel& data)
 {
@@ -50,7 +116,7 @@ bool load(const char* model, ObjModel& data)
 
     enum {BUFFSIZE = 256};
     char buff[BUFFSIZE];
-int err;    
+
     while(fgets(buff, BUFFSIZE, mesh) != NULL) {
 
         if(isVertexCoordinates(buff)) {
@@ -98,31 +164,12 @@ int err;
         }else if(isFaces(buff)) {
             Face face = {};
             char* local = buff + 2;//skip whitespace and f tag
-            enum {
-                VERT_ONLY = 0,// v
-                VERT_TEXT, // v/vt
-                VERT_NORM,// v//vn
-                VERT_TEXT_NORM // v/vt/vn
-            };
-
-            //determine pattern
-            uint8_t currIdx = 0;
-            uint8_t firstSlashPos = -1;
-            uint8_t secondSlashPos = -1;
-            uint8_t thirdSlashPos = -1;
-
-            uint8_t numSlashes = 0;
-            bool twoSlashes = false;
-            
-            while(local[currIdx] && local[currIdx] != ' ') {
-                if(local[currIdx] == '/') {
-                    local[currIdx] = '\0';
-                    int value = std::atoi(local);
-                    printf("ASD\n");
-                }
-                currIdx++;
+            FacePattern ptrn = checkFacePattern(local); 
+            if(ptrn == PATTERN_UNKNOWN) {
+                printf("Error parsing obj file! Unknown face pattern!\n");
+                return false;
             }
-            
+
         }
     }
 
