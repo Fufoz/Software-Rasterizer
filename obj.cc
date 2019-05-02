@@ -41,30 +41,109 @@ enum FacePattern {
     PATTERN_UNKNOWN
 };
 
-static Face parseFace(FacePattern pattern, char** buffer)
+static Face parseFace(FacePattern pattern, char* buffer)
 {
     Face face = {};
-    char* buff = *buffer;
+    char* buff = buffer;
 
-    int values[3] = {};
+    int values[9] = {};
     uint8_t currIdx = 0;
     uint8_t valueIdx = 0;
-    
-    while(buff[currIdx] && buff[currIdx] != ' ')
-    {
-        if(buff[currIdx] == '/') {
-            buff[currIdx] = '\0';
-            values[valueIdx] = atof(buff);
-            buff += currIdx;
+
+    while(buffer[currIdx]) {
+
+        if(buffer[currIdx] == '/' || buffer[currIdx] == ' ') {
+            buffer[currIdx] = '\0';
+            values[valueIdx] = std::atof(buff);
+            if(buffer[currIdx + 1] == '/'){
+                buff = &buffer[currIdx] + 2;//step past null tetminated char
+                currIdx++;
+            }
+            else
+                buff = &buffer[currIdx] + 1;
             valueIdx++;
         }
+
+        if(buffer[currIdx + 1] == 0) {//eof line check
+            values[valueIdx] = std::atof(buff);
+        }
+
         currIdx++;
     }
 
-//    switch(pattern) {
-//        case PATTERN_VERT_ONLY :
-//            face
-//    }
+    switch(pattern) {
+        case PATTERN_VERT_ONLY : {
+            face.vIndex[0] = values[0];
+            face.vIndex[1] = values[1];
+            face.vIndex[2] = values[2];
+            printf("Face %d %d %d\n",face.vIndex[0], face.vIndex[1], face.vIndex[2]);
+            break;
+        }
+        case PATTERN_VERT_NORM : {
+            face.vIndex[0] = values[0];
+            face.nIndex[0] = values[1];
+
+            face.vIndex[1] = values[2];
+            face.nIndex[1] = values[3];
+
+            face.vIndex[2] = values[4];
+            face.nIndex[2] = values[5];
+            printf("Face %d//%d %d//%d %d//%d\n",
+                face.vIndex[0],face.nIndex[0],
+                face.vIndex[1],face.nIndex[1],
+                face.vIndex[2],face.nIndex[2]);
+            break;
+        }
+        case PATTERN_VERT_TEXT : {
+            face.vIndex[0] = values[0];
+            face.tIndex[0] = values[1];
+
+            face.vIndex[1] = values[2];
+            face.tIndex[1] = values[3];
+
+            face.vIndex[2] = values[4];
+            face.tIndex[2] = values[5];
+            printf("Face %d/%d %d/%d %d/%d\n",
+                face.vIndex[0],face.tIndex[0],
+                face.vIndex[1],face.tIndex[1],
+                face.vIndex[2],face.tIndex[2]);
+
+            break;
+        }
+        case PATTERN_VERT_TEXT_NORM : {
+            face.vIndex[0] = values[0];
+            face.tIndex[0] = values[1];
+            face.nIndex[0] = values[2];
+
+            face.vIndex[1] = values[3];
+            face.tIndex[1] = values[4];
+            face.nIndex[1] = values[5];
+
+            face.vIndex[2] = values[6];
+            face.tIndex[2] = values[7];
+            face.nIndex[2] = values[8];
+            printf("Face %d/%d/%d %d/%d/%d %d/%d/%d\n",
+                face.vIndex[0], face.tIndex[0],face.nIndex[0],
+                face.vIndex[1], face.tIndex[1], face.nIndex[1],
+                face.vIndex[2], face.tIndex[2], face.nIndex[2]);
+
+            break;
+        }
+
+    }
+
+
+    return face;
+}
+
+const char* patToStr(FacePattern pattern) {
+    switch(pattern) {
+        case PATTERN_VERT_ONLY : return "PATTERN_VERT_ONLY";
+        case PATTERN_VERT_TEXT : return "PATTERN_VERT_TEXT";
+        case PATTERN_VERT_NORM : return "PATTERN_VERT_NORM";
+        case PATTERN_VERT_TEXT_NORM : return "PATTERN_VERT_TEXT_NORM";
+        default : return "PATTERN_VERT_ONLY";
+    }
 }
 
 static FacePattern checkFacePattern(const char* faceString)
@@ -79,9 +158,7 @@ static FacePattern checkFacePattern(const char* faceString)
         if(faceString[currIdx] == '/') {
             numSlashes++;
             if(faceString[currIdx + 1] == '/') {
-                numSlashes++;
-                pattern = PATTERN_VERT_NORM;
-                break;
+                return PATTERN_VERT_NORM;
             }
         }
         currIdx++;
@@ -96,7 +173,6 @@ static FacePattern checkFacePattern(const char* faceString)
     else
         pattern = PATTERN_UNKNOWN;
     
-    printf("pattern is %d\n",pattern);
     return pattern;
 }
 
@@ -110,72 +186,67 @@ bool load(const char* model, ObjModel& data)
     bool hasTextureCoords = false;
     bool hasNormals = false;
 
+    FacePattern ptrn = PATTERN_UNKNOWN;
     Vec3 vertexPosition = {};
     Vec3 textCoord = {};
     Vec3 normals = {};
 
     enum {BUFFSIZE = 256};
-    char buff[BUFFSIZE];
-
+    char buff[BUFFSIZE] = {};
+    
+    printf("MESH:\n");
+    printf("----------------------------------------\n");
     while(fgets(buff, BUFFSIZE, mesh) != NULL) {
 
         if(isVertexCoordinates(buff)) {
             char* local = buff + 2;//skip whitespace and v tag
 
-            float x = parceFloat(&local);
-            float y = parceFloat(&local);
-            float z = parceFloat(&local);
-
-            vertexPosition.x = x;
-            vertexPosition.y = y;
-            vertexPosition.z = z;
+            vertexPosition.x = parceFloat(&local);
+            vertexPosition.y = parceFloat(&local);
+            vertexPosition.z = parceFloat(&local);
  
             data.vertPos.push_back(vertexPosition);
-            printf("v %f %f %f\n",x,y,z);
+            printf("v %f %f %f\n",vertexPosition.x, vertexPosition.y, vertexPosition.z);
         
         }else if(isTextureCoordinates(buff)){
             char* local = buff + 3;//skip whitespace and vt tag
 
-            float u = parceFloat(&local);
-            float v = parceFloat(&local);
-            float w = parceFloat(&local);
-
-            textCoord.u = u;
-            textCoord.v = v;
-            textCoord.z = w;
+            textCoord.u = parceFloat(&local);
+            textCoord.v = parceFloat(&local);
+            textCoord.z = parceFloat(&local);
 
             data.texCoord.push_back(textCoord);
-            printf("vt %f %f %f\n", u, v, w);
+            printf("vt %f %f %f\n", normals.u, normals.v, normals.z);
 
         }else if(isVertexNormals(buff)){
             char* local = buff + 3;//skip whitespace and vn tag
 
-            float x = parceFloat(&local);
-            float y = parceFloat(&local);
-            float z = parceFloat(&local);
-
-            normals.x = x;
-            normals.y = y;
-            normals.z = z;
+            normals.x = parceFloat(&local);
+            normals.y = parceFloat(&local);
+            normals.z = parceFloat(&local);
 
             data.normals.push_back(normals);
-            printf("vn %f %f %f\n", x, y, z);
+            printf("vn %f %f %f\n", normals.x, normals.y, normals.z);
             
         }else if(isFaces(buff)) {
             Face face = {};
             char* local = buff + 2;//skip whitespace and f tag
-            FacePattern ptrn = checkFacePattern(local); 
+            if(ptrn == PATTERN_UNKNOWN){
+                ptrn = checkFacePattern(local);
+                printf("--Pattern: %s\n",patToStr(ptrn));
+            } 
             if(ptrn == PATTERN_UNKNOWN) {
                 printf("Error parsing obj file! Unknown face pattern!\n");
                 return false;
             }
-
+            face = parseFace(ptrn, local);
+            data.faces.push_back(face);
         }
     }
-
+    printf("----------------------------------------\n");
     printf("MESH INFO:\n Faces = %d\n VertexPositions = %d\n Normals = %d\n Texture Coords = %d\n",
-    data.faces.size(), data.vertPos.size(), data.normals.size(), data.texCoord.size());
-    
+        data.faces.size(), data.vertPos.size(), data.normals.size(), data.texCoord.size());
+    printf("----------------------------------------\n");
     fclose(mesh);
     return true;
 }
