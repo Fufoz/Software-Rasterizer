@@ -22,6 +22,9 @@ static inline bool isFaces(const char* buffer)
 
 static float parceFloat(char** buffer)
 {
+    while(**buffer == ' ')
+        (*buffer)++;
+
     char* buff = *buffer;
     int buffOffset = 0;
     while(buff[buffOffset] && buff[buffOffset] != ' ') {
@@ -216,7 +219,7 @@ bool load(const char* model, ObjModel& data)
             textCoord.z = parceFloat(&local);
 
             data.texCoord.push_back(textCoord);
-            printf("vt %f %f %f\n", normals.u, normals.v, normals.z);
+            printf("vt %f %f %f\n", textCoord.u, textCoord.v, textCoord.z);
 
         }else if(isVertexNormals(buff)){
             char* local = buff + 3;//skip whitespace and vn tag
