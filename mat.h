@@ -2,7 +2,9 @@
 #define MAT_H
 
 #include <cstdint>
-#include <cmath>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <stdio.h>
 #include "vec.h"
 
 struct mat4x4
@@ -49,35 +51,34 @@ inline mat4x4 simplePerspective(Vec3 v)
         0, 0, 0, 1
     };
 }
-
-inline mat4x4 setProjectionMatrix(float angleOfView, float near, float far, float aspectRatio) 
-{ 
-    //set the basic projection matrix
-    float scale = 1 / tan(angleOfView * 0.5f * M_PI / 180.f);
-    return mat4x4 {
-        scale / aspectRatio, 0    , 0,                0,
-        0    , scale, 0,                              0,
-        0,    0,     - (far + near) / (far - near),  -1,
-        0,    0,     - 2 * far * near / (far - near), 0
-    };
-
-//    return mat4x4 {
-//        1, 0    , 0,                0,
-//        0    , 1, 0,                              0,
-//        0,    0,     1,  1/4.f,
-//        0,    0,     0, 0
-//    };
-
-}
-
-inline mat4x4 simplePerspective1(Vec3 v)
+inline mat4x4 viewport(float screenWidth, float screenHeight)
 {
     return mat4x4 {
-        1.f, 0, 0, 0,
-        0, 1.f, 0, 0,
-        0, 0, 1.f, 1.f-v.z/4.f,
-        0, 0, 0, 0
+        screenWidth/2.f,        0,                   0, 0,
+        0,                    -screenHeight/2.f,     0, 0,
+        0,                    0,                     1, 0,
+        screenWidth/2.f-0.5f, screenHeight/2.f-0.5f, 0, 1
     };
+
+}
+inline mat4x4 frustum(float left, float right, float bottom, float top, float near, float far)
+{
+    return mat4x4 {
+        (2.f*near)/(right - left),   0,                          0,                          0,
+        0,                         2.f*near/(top-bottom),        (top+bottom)/(top-bottom),  0,
+        (right+left)/(right-left), (top+bottom)/(top-bottom),  -(far + near)/(far-near),    -1.f,
+        0,                         0,                          (-2.f*far*near)/(far-near),      0
+    };
+}
+
+inline mat4x4 perspectiveProjection(float FOV, float aspect, float near, float far)
+{
+    float h;
+    float w;
+
+    h = tan(FOV * 0.5f * M_PI / 180.f) * near;
+    w = h * aspect;
+    return frustum(-w, w, -h, h, near, far);
 }
 
 inline mat4x4 transpose(const mat4x4& in)
@@ -125,15 +126,14 @@ inline Vec4 operator*(const Vec4& left, const mat4x4& right)
     out.y = left.x * right.p[1] + left.y * right.p[5] + left.z * right.p[9] +  left.w * right.p[13];
     out.z = left.x * right.p[2] + left.y * right.p[6] + left.z * right.p[10] + left.w * right.p[14];
     out.w = left.x * right.p[3] + left.y * right.p[7] + left.z * right.p[11] + left.w * right.p[15];
-    float w = left.x * right.p[3] + left.y * right.p[7] + left.z * right.p[11] + right.p[15];
-    if(w != 1) {
-        out.x /= w;
-        out.y /= w;
-        out.z /= w;
-    }
     return out;
 }
 
+inline Vec4& operator*=(Vec4& left, const mat4x4& right)
+{
+    left = left * right;
+    return left;
+}
 
 inline Vec3 operator*(const Vec3& left, const mat4x4& right)
 {
@@ -153,31 +153,59 @@ inline void logMat4x4(const mat4x4& in)
     }
 }
 
-mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir)
+inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir)
 {
     Vec3 Z  = normaliseVec3(cameraPos - thing);
-    Vec3 At = cross(normaliseVec3(UpDir),Z);
+    Vec3 At = cross(normaliseVec3(UpDir), Z);
     Vec3 Up = cross(Z, At);
 
     mat4x4 rotationPart = {
-        At.x, Up.x, -Z.x, 0,
-        At.y, Up.y, -Z.y, 0,
-        At.z, Up.z, -Z.z, 0,
+        At.x, Up.x, Z.x, 0,
+        At.y, Up.y, Z.y, 0,
+        At.z, Up.z, Z.z, 0,
         0,    0,    0,   1
     };
+    
     mat4x4 translationPart  = loadIdentity();
     translationPart.p[12] = -thing.x;
     translationPart.p[13] = -thing.y;
     translationPart.p[14] = -thing.z;
 
     return rotationPart * translationPart;
-//    return mat4x4 {
-//        At.x, Up.x, Z.x, 0,
-//        At.y, Up.y, Z.y, 0,
-//        At.z, Up.z, Z.z, 0,
-//        -thing.x, -thing.y, -thing.z, 1
-//    };
+}
 
+inline mat4x4 rotateZ(float degrees)
+{
+    float rad = degrees * M_PI / 180.f;
+    printf("Sin rad %f\n",rad);
+    return mat4x4 {
+        cos(rad), sin(rad), 0, 0,
+        -sin(rad), cos(rad), 0, 0,
+        0,         0,        1, 0,
+        0,         0,        0, 1
+    };
+}
+
+inline mat4x4 rotateY(float degrees)
+{
+    float rad = degrees * M_PI / 180.f;
+    return mat4x4 {
+        cos(rad), 0, -sin(rad), 0,
+        0,        1, 0,         0,
+        sin(rad), 0, cos(rad),  0,
+        0,        0, 0,         1
+    };
+}
+
+inline mat4x4 rotateX(float degrees)
+{
+    float rad = degrees * M_PI / 180.f;
+    return mat4x4 {
+        1, 0,         0,         0,
+        0, cos(rad),  sin(rad),  0,
+        0, -sin(rad), cos(rad),  0,
+        0, 0,         0,         1
+    };
 }
 
 #endif

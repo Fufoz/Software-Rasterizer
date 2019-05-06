@@ -174,4 +174,13 @@ inline Vec3 cross(const Vec3& first, const Vec3& second)
     };
 }
 
+inline Vec4 homogenize(const Vec3& in)
+{
+    return Vec4{in.x, in.y, in.z, 1.f};
+}
+
+inline Vec4 perspectiveDivide(const Vec4& in)
+{
+    return Vec4 {in.x/in.w, in.y/in.w, in.z/in.w, 1.f};
+}
 #endif

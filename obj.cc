@@ -179,7 +179,7 @@ static FacePattern checkFacePattern(const char* faceString)
     return pattern;
 }
 
-bool load(const char* model, ObjModel& data)
+bool load(const char* model, Mesh& data)
 {
     FILE* mesh = fopen(model, "rb");
     if(!mesh) {
@@ -255,7 +255,7 @@ bool load(const char* model, ObjModel& data)
 }
 
 
-VertexCoords grabTriVertexCoord(const ObjModel& model, const Face& face)
+VertexCoords grabTriVertexCoord(const Mesh& model, const Face& face)
 {
     VertexCoords out = {};
     out.first  = model.vertPos[face.vIndex[0] - 1];
@@ -264,7 +264,7 @@ VertexCoords grabTriVertexCoord(const ObjModel& model, const Face& face)
     return out;
 }
 
-TriangleTextCoords grabTriTextCoord(const ObjModel& model, const Face& face)
+TriangleTextCoords grabTriTextCoord(const Mesh& model, const Face& face)
 {
     TriangleTextCoords out = {};
     out.first  = model.texCoord[face.tIndex[0] - 1];
@@ -272,3 +272,5 @@ TriangleTextCoords grabTriTextCoord(const ObjModel& model, const Face& face)
     out.third  = model.texCoord[face.tIndex[2] - 1];
     return out;
 }
+
+

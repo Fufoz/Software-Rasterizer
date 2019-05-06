@@ -6,11 +6,6 @@
 #include <cassert>
 
 #include "vec.h"
-struct alignas(16) Vertex
-{
-    Vec4 pos;
-    Vec3 texCoords;
-};
 
 struct Face
 {
@@ -19,7 +14,7 @@ struct Face
     size_t nIndex[3];
 };
 
-struct ObjModel
+struct Mesh
 {
     std::vector<Face> faces;
     std::vector<Vec3> vertPos;
@@ -41,8 +36,8 @@ struct TriangleTextCoords
     Vec3 third;
 };
 
-bool load(const char* model, ObjModel& data);
-VertexCoords grabTriVertexCoord(const ObjModel& model, const Face& face);
-TriangleTextCoords grabTriTextCoord(const ObjModel& model, const Face& face);
+bool load(const char* model, Mesh& data);
+VertexCoords grabTriVertexCoord(const Mesh& model, const Face& face);
+TriangleTextCoords grabTriTextCoord(const Mesh& model, const Face& face);
 
 #endif
