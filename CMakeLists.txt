@@ -20,5 +20,5 @@ add_executable(soft
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})
 target_link_libraries(soft ${SDL_IMPORT_LIBRARY})
 
-install(TARGETS soft RUNTIME DESTINATION ./)
-install(FILES ${SDL_RUNTIME} DESTINATION ./)
+install(TARGETS soft RUNTIME DESTINATION ./bin)
+install(FILES ${SDL_RUNTIME} DESTINATION ./bin)

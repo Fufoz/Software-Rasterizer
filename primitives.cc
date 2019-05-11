@@ -72,13 +72,11 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
     v1 = perspectiveDivide(v1) * viewportTransform;
     v2 = perspectiveDivide(v2) * viewportTransform;
 
-//    float area = computeArea(v0.xyz, v1.xyz, v2.xyz);
-//    if(area < 0)
-//        return;
     drawLine(surface, v0.x, v0.y, v1.x, v1.y, color);
     drawLine(surface, v1.x, v1.y, v2.x, v2.y, color);
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
 }
+
 static bool isInsideClipBox(const Vec4& v0)
 {
 return v0.x <= v0.w && v0.y <=v0.w && v0.z <= v0.w &&
@@ -88,20 +86,10 @@ return v0.x <= v0.w && v0.y <=v0.w && v0.z <= v0.w &&
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
-    //if(isInsideClipBox(v0.pos) &&
-    //    isInsideClipBox(v1.pos) &&
-    //    isInsideClipBox(v2.pos)) {
-//
-    //}else {
-    //    return;
-    //}
     
     v0.pos = perspectiveDivide(v0.pos)  * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos)  * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos)  * viewportTransform;
-    printf("V0 %f %f %f\n",v0.pos.x,v0.pos.y,v0.pos.z);
-    printf("V1 %f %f %f\n",v1.pos.x,v1.pos.y,v1.pos.z);
-    printf("V2 %f %f %f\n",v2.pos.x,v2.pos.y,v2.pos.z);
 
     float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
     
@@ -184,7 +172,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
         w1StartRow -= B20;
         w2StartRow -= B01;
     }
-    printf("Rasterized!\n");
+
 }
 
 }//primitives

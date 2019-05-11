@@ -105,22 +105,14 @@ float x = 1;
 
 void commitFrame(RenderContext* context, const Target& target)
 {
-    //Vec4 v1 = {-1.f, -1.f, 0.f, 1.f};
-    //Vec4 v2 = {1.f, -1.f, 0.f, 1.f};
-    //Vec4 v3 = {0.f, 1.f, 0.f, 1.f};
+
     mat4x4 viewportTransform = viewport(context->width, context->height);
     mat4x4 rotation = rotateX(x) * rotateY(x);
     x+=0.1;
     mat4x4 modelWorldTransform = loadScale(Vec3{0.5f, 0.5f, 0.5f}) * rotation;
-    viewportTransform = viewportTransform;
-    
-    //mat4x4 worldCameraTransform = lookAt(Vec3{0.f, cos(x), 2.f}, Vec3{0.f, 0.f, 0.f});
-    mat4x4 worldCameraTransform = lookAt(cameraPos, cameraPos + cameraForward);
-    
-    //logMat4x4("ViewMatrix",worldCameraTransform);
+    mat4x4 worldCameraTransform = lookAt(cameraPos, cameraPos + cameraForward);    
     mat4x4 perspective = perspectiveProjection(90.f, context->width / context->height, 0.1f, 100.f);
-    //mat4x4 perspective  = perspectiveGL(90.f, context->width / context->height, 0.1f, 100.f);
-    //logMat4x4("Perspective",perspective);
+    
     Vec3 lightDirection = {0, 0, 1.f};
     
     for(uint32_t i = 0; i < target.mesh.faces.size(); i++) {
@@ -135,10 +127,10 @@ void commitFrame(RenderContext* context, const Target& target)
         float intensity = dotVec3(faceNormal, lightDirection);
 //            primitives::drawTriangleHalfSpace(context->surface, viewportTransform, context->zBuffer,
 //                target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{98.f, 155.f, 123.f, 255.f});
-
+        Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
         if(intensity > 0)
             primitives::drawTriangleHalfSpace(context->surface, viewportTransform, context->zBuffer,
-                target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{intensity * 255.f, intensity * 255.f, intensity * 255.f, 255.f});
+                target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A});
 
     }
 }
