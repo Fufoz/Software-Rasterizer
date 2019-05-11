@@ -6,7 +6,6 @@
 #include "obj.h"
 #include "mat.h"
 
-
 struct RenderContext
 {
     std::vector<float> zBuffer;
@@ -44,6 +43,8 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
 void destroySoftwareRenderer(RenderContext* context);
 
 void beginFrame(RenderContext* context);
+
+void processInput(RenderContext* context);
 
 /*only works with single mesh instance!!!*/
 void commitFrame(RenderContext* context, const Target& target);

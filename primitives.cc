@@ -7,12 +7,22 @@ namespace primitives {
 
 void drawPixel(const SDL_Surface* surface, int x, int y, Vec4 color)
 {
+    //assert(x < surface->w && y < surface->h);
+    //assert(x >= 0 && y >= 0);
+//
+	//uint32_t* pixelPtr = (uint32_t*)surface->pixels;
+//
+    //pixelPtr += y * surface->w + x;    
+	//*pixelPtr = SDL_MapRGBA(surface->format, color.R, color.G, color.B, color.A);
+
     assert(x < surface->w && y < surface->h);
     assert(x >= 0 && y >= 0);
 
 	uint32_t* pixelPtr = (uint32_t*)surface->pixels;
 
-    pixelPtr += y * surface->w + x;    
+	pixelPtr += surface->w * (surface->h - 1); 
+    
+    pixelPtr += x - surface->w * y;
 	*pixelPtr = SDL_MapRGBA(surface->format, color.R, color.G, color.B, color.A);
 }
 
@@ -52,6 +62,7 @@ void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec4 c
 
 static float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
 {
+    //return (v2.x - v0.x) * (v1.y - v0.y) - (v1.x - v0.x) * (v2.y - v0.y);
     return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x  - v0.x) * (v1.y - v0.y); 
 }
 
@@ -68,17 +79,33 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
     drawLine(surface, v1.x, v1.y, v2.x, v2.y, color);
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
 }
+static bool isInsideClipBox(const Vec4& v0)
+{
+return v0.x <= v0.w && v0.y <=v0.w && v0.z <= v0.w &&
+        v0.x >= -v0.w && v0.y >= -v0.w && v0.z >= -v0.w; 
+}
 
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
+    //if(isInsideClipBox(v0.pos) &&
+    //    isInsideClipBox(v1.pos) &&
+    //    isInsideClipBox(v2.pos)) {
+//
+    //}else {
+    //    return;
+    //}
+    
     v0.pos = perspectiveDivide(v0.pos)  * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos)  * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos)  * viewportTransform;
+    printf("V0 %f %f %f\n",v0.pos.x,v0.pos.y,v0.pos.z);
+    printf("V1 %f %f %f\n",v1.pos.x,v1.pos.y,v1.pos.z);
+    printf("V2 %f %f %f\n",v2.pos.x,v2.pos.y,v2.pos.z);
 
-
-    float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
-
+    float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
+    
+    //backface culling
     if(triArea < 0)
         return;
     //compute triangle bounding box
@@ -157,6 +184,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
         w1StartRow -= B20;
         w2StartRow -= B01;
     }
+    printf("Rasterized!\n");
 }
 
 }//primitives

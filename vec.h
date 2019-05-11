@@ -145,6 +145,16 @@ inline Vec3& operator-=(Vec3& self, const Vec3& other)
     return self;
 }
 
+inline Vec3 operator*(float scalar,const Vec3& other)
+{
+    return Vec3{scalar * other.x, scalar * other.y, scalar * other.z};
+}
+
+inline Vec3 operator*(const Vec3& other, float scalar)
+{
+    return scalar * other;
+}
+
 inline float dotVec3(const Vec3& left, const Vec3& right)
 {
     return left.x * right.x + left.y * right.y + left.z * right.z; 

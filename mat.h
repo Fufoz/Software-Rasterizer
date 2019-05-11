@@ -55,12 +55,13 @@ inline mat4x4 viewport(float screenWidth, float screenHeight)
 {
     return mat4x4 {
         screenWidth/2.f,        0,                   0, 0,
-        0,                    -screenHeight/2.f,     0, 0,
+        0,                    screenHeight/2.f,      0, 0,
         0,                    0,                     1, 0,
         screenWidth/2.f-0.5f, screenHeight/2.f-0.5f, 0, 1
     };
 
 }
+
 inline mat4x4 frustum(float left, float right, float bottom, float top, float near, float far)
 {
     return mat4x4 {
@@ -79,6 +80,18 @@ inline mat4x4 perspectiveProjection(float FOV, float aspect, float near, float f
     h = tan(FOV * 0.5f * M_PI / 180.f) * near;
     w = h * aspect;
     return frustum(-w, w, -h, h, near, far);
+}
+
+inline mat4x4 perspectiveGL(float FOV, float aspect, float near, float far)
+{
+    float angle = tan(FOV * 0.5f * M_PI / 180.f); 
+
+    return mat4x4 {
+        angle/aspect, 0,     0,                              0,
+        0,            angle, 0,                              0,
+        0,            0,      -(far+near)/(far-near),        -1,
+        0,            0,      -2 * far * near / (far - near), 0
+    };
 }
 
 inline mat4x4 transpose(const mat4x4& in)
@@ -143,17 +156,19 @@ inline Vec3 operator*(const Vec3& left, const mat4x4& right)
 }
 
 
-inline void logMat4x4(const mat4x4& in)
+inline void logMat4x4(const char* tag, const mat4x4& in)
 {
+    printf("-------------------%s--------------------\n",tag);
     for(uint8_t i = 0; i < 4; i++) {
         for(uint8_t j = 0; j < 4; j++) {
-            printf("%f.4 ",in.p[j + 4 * i]);
+            printf("%f ",in.p[j + 4 * i]);
         }
         printf("\n");
     }
+    printf("---------------------------------------\n");
 }
 
-inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir)
+inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f})
 {
     Vec3 Z  = normaliseVec3(cameraPos - thing);
     Vec3 At = cross(normaliseVec3(UpDir), Z);
@@ -177,7 +192,7 @@ inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir)
 inline mat4x4 rotateZ(float degrees)
 {
     float rad = degrees * M_PI / 180.f;
-    printf("Sin rad %f\n",rad);
+
     return mat4x4 {
         cos(rad), sin(rad), 0, 0,
         -sin(rad), cos(rad), 0, 0,
