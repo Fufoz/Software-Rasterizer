@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <cassert>
 
-#include "vec.h"
+#include "math.h"
 
 struct Face
 {

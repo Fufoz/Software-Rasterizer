@@ -12,6 +12,8 @@ set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)
 
 add_executable(soft
     main.cc
+    input.cc
+    texture.cc
     obj.cc
     primitives.cc
     renderer.cc

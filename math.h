@@ -1,17 +1,213 @@
-#ifndef MAT_H
-#define MAT_H
+#ifndef MATH_H
+#define MATH_H
 
 #include <cstdint>
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <stdio.h>
-#include "vec.h"
+#include <cmath>
+
+#define PI 3.14159265359
 
 struct mat4x4
 {
     float p[16];
 };
 
+union Vec2
+{
+    struct {
+        float x;
+        float y;
+    };
+
+    struct {
+        float u;
+        float v;
+    };
+    
+    struct {
+        float data[2];
+    };
+
+    inline float& operator[] (int idx) { return data[idx];}
+    inline const float& operator[] (int idx) const { return data[idx];} 
+};
+
+union Vec3
+{
+    struct {
+        float x;
+        float y;
+        float z;
+    };
+    
+    struct {
+        float u;
+        float v;
+        float _;
+    };
+
+    struct {
+        float R;
+        float G;
+        float B;
+    };
+
+    struct {
+        float data[3];
+    };
+
+    inline float& operator[] (int idx) { return data[idx];}
+    inline const float& operator[] (int idx) const { return data[idx];} 
+};
+
+union Vec4
+{
+    struct {
+        union {
+            struct {
+                float x;
+                float y;
+                float z;
+            };
+            Vec3 xyz;
+        };
+
+        float w;
+    };
+
+    struct {
+        float R;
+        float G;
+        float B;
+        float A;
+    };
+
+    struct {
+        float data[4];
+    };
+
+    inline float& operator[] (int idx) { return data[idx];} 
+    inline const float& operator[] (int idx) const { return data[idx];} 
+};
+
+typedef Vec4 Quat;
+
+/*********************VECTOR OPERATIONS************************************/
+
+inline Vec2 operator+(const Vec2& left, const Vec2& right)
+{
+    return Vec2{left.x + right.x, left.y + right.y};
+}
+
+inline Vec2 operator-(const Vec2& left, const Vec2& right)
+{
+    return Vec2{left.x - right.x, left.y - right.y};
+}
+
+inline Vec2& operator+=(Vec2& self, const Vec2& other)
+{
+    self = self + other;
+    return self;
+}
+
+inline Vec2& operator-=(Vec2& self, const Vec2& other)
+{
+    self = self - other;
+    return self;
+}
+
+inline float dotVec2(const Vec2& left, const Vec2& right)
+{
+    return left.x * right.x + left.y * right.y; 
+}
+
+inline float lengthVec2(const Vec2& in)
+{
+    return sqrt(dotVec2(in, in));
+}
+
+inline Vec2 normaliseVec2(const Vec2& in)
+{
+    float length = lengthVec2(in);
+    if(length > 0) {
+        float invLength = 1 / length;
+        return Vec2{in.x * invLength, in.y * invLength};
+    }
+    return Vec2{0.f, 0.f};
+}
+
+inline Vec3 operator+(const Vec3& left, const Vec3& right)
+{
+    return Vec3{left.x + right.x, left.y + right.y, left.z + right.z};
+}
+
+inline Vec3 operator-(const Vec3& left, const Vec3& right)
+{
+    return Vec3{left.x - right.x, left.y - right.y, left.z - right.z};
+}
+
+inline Vec3& operator+=(Vec3& self, const Vec3& other)
+{
+    self = self + other;
+    return self;
+}
+
+inline Vec3& operator-=(Vec3& self, const Vec3& other)
+{
+    self = self - other;
+    return self;
+}
+
+inline Vec3 operator*(float scalar,const Vec3& other)
+{
+    return Vec3{scalar * other.x, scalar * other.y, scalar * other.z};
+}
+
+inline Vec3 operator*(const Vec3& other, float scalar)
+{
+    return scalar * other;
+}
+
+inline float dotVec3(const Vec3& left, const Vec3& right)
+{
+    return left.x * right.x + left.y * right.y + left.z * right.z; 
+}
+
+inline float lengthVec3(const Vec3& in)
+{
+    return sqrt(dotVec3(in, in));
+}
+
+inline Vec3 normaliseVec3(const Vec3& in)
+{
+    float length = lengthVec3(in);
+    if(length > 0) {
+        float invLength = 1 / length;
+        return Vec3{in.x * invLength, in.y * invLength, in.z * invLength};
+    }
+    return Vec3{0.f, 0.f, 0.f};
+}
+
+inline Vec3 cross(const Vec3& first, const Vec3& second)
+{
+    return Vec3{
+        first.y * second.z - first.z * second.y,
+        first.z * second.x - first.x * second.z,
+        first.x * second.y - first.y * second.x
+    };
+}
+
+inline Vec4 homogenize(const Vec3& in)
+{
+    return Vec4{in.x, in.y, in.z, 1.f};
+}
+
+inline Vec4 perspectiveDivide(const Vec4& in)
+{
+    return Vec4 {in.x/in.w, in.y/in.w, in.z/in.w, 1.f};
+}
+
+/*********************4x4MAT OPERATIONS************************************/
 inline mat4x4 loadIdentity()
 {
     return mat4x4 {
@@ -51,6 +247,7 @@ inline mat4x4 simplePerspective(Vec3 v)
         0, 0, 0, 1
     };
 }
+
 inline mat4x4 viewport(float screenWidth, float screenHeight)
 {
     return mat4x4 {
@@ -77,14 +274,14 @@ inline mat4x4 perspectiveProjection(float FOV, float aspect, float near, float f
     float h;
     float w;
 
-    h = tan(FOV * 0.5f * M_PI / 180.f) * near;
+    h = tan(FOV * 0.5f * PI / 180.f) * near;
     w = h * aspect;
     return frustum(-w, w, -h, h, near, far);
 }
 
 inline mat4x4 perspectiveGL(float FOV, float aspect, float near, float far)
 {
-    float angle = tan(FOV * 0.5f * M_PI / 180.f); 
+    float angle = tan(FOV * 0.5f * PI / 180.f); 
 
     return mat4x4 {
         angle/aspect, 0,     0,                              0,
@@ -155,7 +352,6 @@ inline Vec3 operator*(const Vec3& left, const mat4x4& right)
     return out.xyz;
 }
 
-
 inline void logMat4x4(const char* tag, const mat4x4& in)
 {
     printf("-------------------%s--------------------\n",tag);
@@ -186,12 +382,12 @@ inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f
     translationPart.p[13] = -thing.y;
     translationPart.p[14] = -thing.z;
 
-    return rotationPart * translationPart;
+    return translationPart * rotationPart;
 }
 
 inline mat4x4 rotateZ(float degrees)
 {
-    float rad = degrees * M_PI / 180.f;
+    float rad = degrees * PI / 180.f;
 
     return mat4x4 {
         cos(rad), sin(rad), 0, 0,
@@ -203,7 +399,7 @@ inline mat4x4 rotateZ(float degrees)
 
 inline mat4x4 rotateY(float degrees)
 {
-    float rad = degrees * M_PI / 180.f;
+    float rad = degrees * PI / 180.f;
     return mat4x4 {
         cos(rad), 0, -sin(rad), 0,
         0,        1, 0,         0,
@@ -214,7 +410,7 @@ inline mat4x4 rotateY(float degrees)
 
 inline mat4x4 rotateX(float degrees)
 {
-    float rad = degrees * M_PI / 180.f;
+    float rad = degrees * PI / 180.f;
     return mat4x4 {
         1, 0,         0,         0,
         0, cos(rad),  sin(rad),  0,
@@ -222,5 +418,6 @@ inline mat4x4 rotateX(float degrees)
         0, 0,         0,         1
     };
 }
+
 
 #endif

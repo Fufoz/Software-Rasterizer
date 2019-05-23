@@ -7,13 +7,6 @@ namespace primitives {
 
 void drawPixel(const SDL_Surface* surface, int x, int y, Vec4 color)
 {
-    //assert(x < surface->w && y < surface->h);
-    //assert(x >= 0 && y >= 0);
-//
-	//uint32_t* pixelPtr = (uint32_t*)surface->pixels;
-//
-    //pixelPtr += y * surface->w + x;    
-	//*pixelPtr = SDL_MapRGBA(surface->format, color.R, color.G, color.B, color.A);
 
     assert(x < surface->w && y < surface->h);
     assert(x >= 0 && y >= 0);
@@ -62,7 +55,6 @@ void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec4 c
 
 static float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
 {
-    //return (v2.x - v0.x) * (v1.y - v0.y) - (v1.x - v0.x) * (v2.y - v0.y);
     return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x  - v0.x) * (v1.y - v0.y); 
 }
 
@@ -86,7 +78,7 @@ return v0.x <= v0.w && v0.y <=v0.w && v0.z <= v0.w &&
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
-    
+
     v0.pos = perspectiveDivide(v0.pos)  * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos)  * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos)  * viewportTransform;
@@ -96,6 +88,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
     //backface culling
     if(triArea < 0)
         return;
+        
     //compute triangle bounding box
     int topY   = std::max(std::max(v0.pos.y, v1.pos.y), v2.pos.y);
     int leftX  = std::min(std::min(v0.pos.x, v1.pos.x), v2.pos.x);

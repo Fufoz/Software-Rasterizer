@@ -4,26 +4,29 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include "obj.h"
-#include "mat.h"
+#include "math.h"
+#include "texture.h"
+
+struct Window
+{
+    SDL_Window* window;
+    uint32_t width;
+    uint32_t height;
+    const char* title;
+    bool isRunning;
+};
 
 struct RenderContext
 {
     std::vector<float> zBuffer;
-    SDL_Renderer* renderer;
     SDL_Surface* surface;
-    SDL_Window* window;
-    uint32_t width;
-    uint32_t height;
-    bool isWindowChanged;
-    bool isRunning;
+    Window window;
 };
 
-struct Texture
+enum RenderMode
 {
-    size_t width;
-    size_t height;
-    uint8_t numc;
-    uint8_t* data;
+    MODE_COLOR =  1 << 0,
+    MODE_DEPTH =  1 << 1
 };
 
 struct Target
@@ -38,6 +41,8 @@ struct Vertex
     Vec3 texCoords;
 };
 
+bool windowClosed();
+
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height);
 
 void destroySoftwareRenderer(RenderContext* context);
@@ -51,5 +56,4 @@ void commitFrame(RenderContext* context, const Target& target);
 
 void endFrame(RenderContext* context);
 
-bool loadTexture(const char* path, Texture* out, bool flipImage = false);
 #endif
