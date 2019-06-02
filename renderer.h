@@ -25,8 +25,9 @@ struct RenderContext
 
 enum RenderMode
 {
-    MODE_COLOR =  1 << 0,
-    MODE_DEPTH =  1 << 1
+    MODE_WIREFRAME =  1 << 0,
+    MODE_DEPTH     =  1 << 1,
+    MODE_TEXTURED  =  1 << 2
 };
 
 struct Target

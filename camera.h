@@ -20,8 +20,6 @@ struct Camera
     ProjectionType pType;
 };
 
-//float yaw = 0;
-//float pitch = 0;
 
 inline void updateCameraPosition(Camera* camera)
 {

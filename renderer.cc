@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include "camera.h"
 
-
 bool windowClosed()
 {
     return isKeyPressed(BTN_ESCAPE);
@@ -99,10 +98,10 @@ void commitFrame(RenderContext* context, const Target& target)
         float intensity = dotVec3(faceNormal, lightDirection);
         Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
         
-        if(intensity > 0)
-            primitives::drawTriangleHalfSpace(context->surface, viewportTransform, context->zBuffer,
+        if(intensity > 0) {
+            pipeline::renderTriangle(context->surface, viewportTransform, context->zBuffer,
                 target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A});
-
+        }
     }
 }
 

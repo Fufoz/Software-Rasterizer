@@ -207,6 +207,43 @@ inline Vec4 perspectiveDivide(const Vec4& in)
     return Vec4 {in.x/in.w, in.y/in.w, in.z/in.w, 1.f};
 }
 
+inline float dotVec4(const Vec4& left, const Vec4& right)
+{
+    return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w; 
+}
+
+inline Vec4 operator*(float scalar,const Vec4& other)
+{
+    return Vec4{scalar * other.x, scalar * other.y, scalar * other.z, scalar * other.w};
+}
+
+inline Vec4 operator*(const Vec4& other, float scalar)
+{
+    return scalar * other;
+}
+
+inline Vec4 operator+(const Vec4& left, const Vec4& right)
+{
+    return Vec4{left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w};
+}
+
+inline Vec4 operator-(const Vec4& left, const Vec4& right)
+{
+    return Vec4{left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w};
+}
+
+inline Vec4& operator+=(Vec4& self, const Vec4& other)
+{
+    self = self + other;
+    return self;
+}
+
+inline Vec4& operator-=(Vec4& self, const Vec4& other)
+{
+    self = self - other;
+    return self;
+}
+
 /*********************4x4MAT OPERATIONS************************************/
 inline mat4x4 loadIdentity()
 {
@@ -419,5 +456,48 @@ inline mat4x4 rotateX(float degrees)
     };
 }
 
+template<typename T>
+inline T max(T a, T b)
+{
+    return a > b ? a : b;
+}
+
+template<typename T>
+inline T min(T a, T b)
+{
+    return a > b ? b : a;
+}
+
+float lerp(float start, float end, float amount)
+{
+    return start + amount * (end - start);
+}
+
+Vec2 lerp(Vec2 start, Vec2 end, float amount)
+{
+    return Vec2 { 
+        lerp(start.x, end.x, amount),
+        lerp(start.y, end.y, amount)
+    };
+}
+
+Vec3 lerp(Vec3 start, Vec3 end, float amount)
+{
+    return Vec3 { 
+        lerp(start.x, end.x, amount),
+        lerp(start.y, end.y, amount),
+        lerp(start.z, end.z, amount)
+    };
+}
+
+Vec4 lerp(Vec4 start, Vec4 end, float amount)
+{
+    return Vec4 { 
+        lerp(start.x, end.x, amount),
+        lerp(start.y, end.y, amount),
+        lerp(start.z, end.z, amount),
+        lerp(start.w, end.w, amount)
+    };
+}
 
 #endif
