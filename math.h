@@ -468,12 +468,12 @@ inline T min(T a, T b)
     return a > b ? b : a;
 }
 
-float lerp(float start, float end, float amount)
+inline float lerp(float start, float end, float amount)
 {
     return start + amount * (end - start);
 }
 
-Vec2 lerp(Vec2 start, Vec2 end, float amount)
+inline Vec2 lerp(Vec2 start, Vec2 end, float amount)
 {
     return Vec2 { 
         lerp(start.x, end.x, amount),
@@ -481,7 +481,7 @@ Vec2 lerp(Vec2 start, Vec2 end, float amount)
     };
 }
 
-Vec3 lerp(Vec3 start, Vec3 end, float amount)
+inline Vec3 lerp(Vec3 start, Vec3 end, float amount)
 {
     return Vec3 { 
         lerp(start.x, end.x, amount),
@@ -490,7 +490,7 @@ Vec3 lerp(Vec3 start, Vec3 end, float amount)
     };
 }
 
-Vec4 lerp(Vec4 start, Vec4 end, float amount)
+inline Vec4 lerp(Vec4 start, Vec4 end, float amount)
 {
     return Vec4 { 
         lerp(start.x, end.x, amount),

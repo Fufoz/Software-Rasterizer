@@ -29,178 +29,140 @@ enum PlaneBits
     PLANE_TOP_BIT    = 1 << 2,
     PLANE_BOTTOM_BIT = 1 << 3,
     PLANE_NEAR_BIT   = 1 << 4,
-    PLANE_FAR_BIT    = 1 << 5,
-};
-typedef int VertexCode;
-static const int PLANES_COUNT = 6;
-
-enum EdgeOrientBits
-{
-    EDGE_IN_IN_BIT,
-    EDGE_OUT_OUT_BIT,
-    EDGE_IN_OUT_BIT,
-    EDGE_OUT_IN_BIT
-};
-
-static Vec4 LEFT   {1.f, 0.f, 0.f, 1.f};
-static Vec4 RIGHT  {-1.f, 0.f, 0.f, 1.f};
-static Vec4 TOP    {0.f, -1.f, 0.f, 1.f};
-static Vec4 BOTTOM {0.f, 1.f, 0.f, 1.f};
-static Vec4 NEAR   {0.f, 0.f, 1.f, 1.f};
-static Vec4 FAR    {0.f, 0.f, -1.f, 1.f};
-
-union BoundaryCoord
-{
-    struct { 
-        float left;
-        float right;
-        float top;
-        float bottom;
-        float near;
-        float far;
-    };
-
-    float planes[6];
-};
-
-struct ClipVertex
-{
-    Vec4 pos;
-    BoundaryCoord bc;
-    VertexCode code;
+    PLANE_FAR_BIT    = 1 << 5
 };
 
 struct VertexBuffer
 {
-    size_t currPos;
+    size_t size;
     Vec4 clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
 };
 
-static BoundaryCoord computeBoundaryCoordinates(const Vec4& vertex)
-{
-    BoundaryCoord values = {};
-    values.left   = dotVec4(vertex, LEFT);
-    values.right  = dotVec4(vertex, RIGHT);
-    values.top    = dotVec4(vertex, TOP);
-    values.bottom = dotVec4(vertex, BOTTOM);
-    values.near   = dotVec4(vertex, NEAR);
-    values.far    = dotVec4(vertex, FAR);
-    return values;
-}
-
-static VertexCode computePlaneMask(const BoundaryCoord& bc)
-{   
-    VertexCode code = {};
-
-    if(bc.left < 0)
-        code |= PLANE_LEFT_BIT;
-    if(bc.right < 0)
-        code |= PLANE_RIGHT_BIT;
-    if(bc.top < 0)
-        code |= PLANE_TOP_BIT;
-    if(bc.bottom < 0)
-        code |= PLANE_BOTTOM_BIT;
-    if(bc.near < 0)
-        code |= PLANE_NEAR_BIT;
-    if(bc.far < 0)
-        code |= PLANE_FAR_BIT;
-
-    return code;
-}
-
-
 static void vbPushData(VertexBuffer& vbuffer, const Vec4& data)
 {
-    assert(vbuffer.currPos < MAX_CLIPPED_VERTEX_COUNT);
-    vbuffer.clippedVertices[vbuffer.currPos] = data;
-    vbuffer.currPos++;
+    assert(vbuffer.size < MAX_CLIPPED_VERTEX_COUNT);
+    vbuffer.clippedVertices[vbuffer.size] = data;
+    vbuffer.size++;
 }
 
-static void clipEdge(const ClipVertex& begin, const ClipVertex& end, VertexBuffer& out)
+static inline bool isVertexInsidePlane(const Vec4& vertex, PlaneBits plane)
 {
-    if((begin.code | end.code) == 0) {
-        //trivial accept
-        vbPushData(out, begin.pos);
-        vbPushData(out, end.pos);
-    } else if( begin.code & end.code) {
-        //trivial reject. both points share the same outside plane
-    } else { //nontrivial stuff
-        VertexCode allPlanes = begin.code | end.code;
-        VertexCode planeIterator = 1;
-        float alpha0 = 0.f;
-        float alpha1 = 1.f;
+    switch(plane) {
+        case PLANE_LEFT_BIT : return vertex.x >= -vertex.w; 
+        case PLANE_RIGHT_BIT : return vertex.x <= vertex.w;
+        case PLANE_TOP_BIT : return vertex.y <= vertex.w;
+        case PLANE_BOTTOM_BIT : return vertex.y >= -vertex.w;
+        case PLANE_NEAR_BIT : return vertex.z >= -vertex.w;
+        case PLANE_FAR_BIT : return vertex.z <= vertex.w;
+    }
+}
 
-        //process single edge
-        for(int i = 0; i < PLANES_COUNT; i++) {
-            
-            if(allPlanes & planeIterator) {
-                float alpha = begin.bc.planes[planeIterator] / (begin.bc.planes[planeIterator] - end.bc.planes[planeIterator]);
-                if(begin.code & allPlanes) {
-                    //we're basically narrowing down line segment from each side
-                    alpha0 = max(alpha0, alpha);
-                }else{
-                    alpha1 = min(alpha1, alpha);
-                }
-            }
+static Vec4 intersectPlaneSegment(const Vec4& v1, const Vec4& v2, PlaneBits plane)
+{
 
-            if(alpha1 < alpha0) // non-trivial reject
-                return;
-            planeIterator <<= 1;
-        }
+    float sign = 0.f;
+    float val1 = 0.f;
+    float val2 = 0.f;
 
-        Vec4 beginPos = begin.pos;
-        Vec4 endPos = end.pos;
-
-        if(begin.code) {
-            beginPos = begin.pos + alpha0 * (end.pos - begin.pos);
-        }
-
-        if(end.code) {
-            endPos = begin.pos + alpha1 * (end.pos - begin.pos);
-        }
-
-        vbPushData(out, beginPos);
-        vbPushData(out, endPos);
+    switch(plane) {
+        case PLANE_LEFT_BIT : 
+        case PLANE_RIGHT_BIT :
+            val1 = v1.x; val2 = v2.x;
+            break;
+        case PLANE_TOP_BIT :
+        case PLANE_BOTTOM_BIT:
+            val1 = v1.y; val2 = v2.y;
+            break;
+        case PLANE_FAR_BIT :
+        case PLANE_NEAR_BIT :
+            val1 = v1.z; val2 = v2.z;
+            break;
     }
 
+    if(plane & (PLANE_LEFT_BIT|PLANE_BOTTOM_BIT|PLANE_NEAR_BIT))
+        sign = 1.f;
+    else{
+        sign = -1.f;
+    }
 
+    float amount = (v1.w + val1 * sign) / (v1.w  + val1 * sign - v2.w  - val2 * sign);
+
+    return lerp(v1, v2, amount);
+}
+
+static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
+{
+    //setting starting point equals to last point in input array
+    Vec4 startPoint = in.clippedVertices[in.size - 1];
+    
+    //resetting output buffer
+    VertexBuffer out = {};
+
+    for(int i = 0; i < in.size; i++) {
+        Vec4 endPoint = in.clippedVertices[i];
+        if(isVertexInsidePlane(startPoint, clipPlane)) {
+            if(isVertexInsidePlane(endPoint, clipPlane)) {
+                printf("CLIPPER: IN_IN\n");
+                vbPushData(out, endPoint);//IN_IN
+            } else {
+            //IN_OUT
+                printf("CLIPPER: IN_OUT\n");
+                //push straddled point
+                Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                vbPushData(out, straddledPoint);
+            }
+        }
+        else{
+            if(isVertexInsidePlane(endPoint, clipPlane)) { //OUT_IN
+                printf("CLIPPER: OUT_IN\n"); 
+                //push straddled point
+                Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                vbPushData(out, straddledPoint);
+                //push end Point
+                vbPushData(out, endPoint);
+            }else{
+                printf("CLIPPER: OUT_OUT\n");
+                //OUT_OUT
+                //do nothing
+            }
+        }
+
+        startPoint = endPoint;
+    }
+
+    return out;
 }
 
 ClippResult clipTriangle(const Vec4& v1, const Vec4& v2, const Vec4& v3)
 {
-    ClipVertex data1 = {};
-    ClipVertex data2 = {};
-    ClipVertex data3 = {};
-    
-    data1.pos = v1;
-    data2.pos = v2;
-    data3.pos = v3;
-    data1.bc = computeBoundaryCoordinates(v1);
-    data2.bc = computeBoundaryCoordinates(v2);
-    data3.bc = computeBoundaryCoordinates(v3);    
-    data1.code = computePlaneMask(data1.bc);
-    data2.code = computePlaneMask(data2.bc);
-    data3.code = computePlaneMask(data3.bc);
-
-    VertexBuffer vBuff = {};
-    clipEdge(data1, data2, vBuff);
-    clipEdge(data2, data3, vBuff);
-    clipEdge(data3, data1, vBuff);
-
     ClippResult result = {};
+    VertexBuffer in = {3, {v1, v2, v3}};
+    VertexBuffer out = {};
 
-    //incrorrect!    
-    result.numTriangles = vBuff.currPos / 2 - 2;
+    out = clipAgainstEdge(in, PLANE_LEFT_BIT);
+    in = clipAgainstEdge(out, PLANE_RIGHT_BIT);
+    out = clipAgainstEdge(in, PLANE_TOP_BIT);
+    in = clipAgainstEdge(out, PLANE_BOTTOM_BIT);
+    out = clipAgainstEdge(in, PLANE_NEAR_BIT);
+    in = clipAgainstEdge(out, PLANE_FAR_BIT);
+    
+    if(in.size == 0)
+        return result;
+    
+    result.numTriangles = in.size - 2;
+    Vec4 refPoint = in.clippedVertices[0];
 
-    if(result.numTriangles > 0) {
-        Vec4 referenceVert = vBuff.clippedVertices[0];
-        for(size_t i = 0; i < result.numTriangles; i++) {
-            Triangle& tr = result.triangles[i];
-            tr.v1 = referenceVert;
-            tr.v2 = vBuff.clippedVertices[i + 1];
-            tr.v3 = vBuff.clippedVertices[i + 3];
-        }
+    for(int i = 0; i < result.numTriangles; i++) {
+        Triangle& tr = result.triangles[i];
+        tr.v1 = refPoint;
+        tr.v2 = in.clippedVertices[i + 1]; 
+        tr.v3 = in.clippedVertices[i + 2];
+ //       printf("Triangle: v1 : {%f, %f, %f} v2:{%f, %f, %f} v3:{%f, %f, %f}\n",
+ //       tr.v1.x,tr.v1.y,tr.v1.z,
+ //       tr.v2.x,tr.v2.y,tr.v2.z,
+ //       tr.v3.x,tr.v3.y,tr.v3.z);
     }
+
     return result;
 }
 

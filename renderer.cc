@@ -74,9 +74,8 @@ void commitFrame(RenderContext* context, const Target& target)
 {
     
     mat4x4 viewportTransform = viewport(context->window.width, context->window.height);
-    mat4x4 rotation = loadIdentity();
 
-    mat4x4 modelWorldTransform = loadScale(Vec3{0.5f, 0.5f, 0.5f}) * rotation;
+    mat4x4 modelWorldTransform = loadScale(Vec3{0.5f, 0.5f, 0.5f});
     updateCameraPosition(&camera);
     
     mat4x4 worldCameraTransform = lookAt(camera.camPos, camera.camPos + camera.forward);    
