@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <cmath>
 
-#define PI 3.14159265359
+#define PI 3.14159265359f
 
 struct mat4x4
 {
@@ -227,7 +227,7 @@ inline float dotVec4(const Vec4& left, const Vec4& right)
     return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w; 
 }
 
-inline Vec4 operator*(float scalar,const Vec4& other)
+inline Vec4 operator*(float scalar, const Vec4& other)
 {
     return Vec4{scalar * other.x, scalar * other.y, scalar * other.z, scalar * other.w};
 }
@@ -519,7 +519,13 @@ inline Quat conjugate(const Quat& in)
 {
     return Quat{-in.x, -in.y, -in.z, in.w};
 }
+//For unit quaternions conjugate and inverse are identical
+inline Quat makeInverse(const Quat& in)
+{
+    return conjugate(in);
+}
 
+//A.K.A Hamilton product
 inline Quat operator*(const Quat& left, const Quat& right)
 {
     Quat out = {};
@@ -538,6 +544,7 @@ inline Quat quatFromAxisAndAngle(const Vec3& axis, float angle)
 
     return out;
 }
+
 
 
 #endif

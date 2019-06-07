@@ -10,7 +10,7 @@ struct Timer {
         m_StartTime = std::chrono::system_clock::now();
     }
 
-    double stopMs()
+    int64_t stopMs()
     {
         return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_StartTime).count();
     }

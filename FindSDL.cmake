@@ -21,15 +21,33 @@ message(status " SDL Build type : ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEASE")
     set(SDL_LIB_NAME SDL2)
+    if(MSVC)
+        set(SDL_MAIN_LIB_NAME SDL2main)
+    endif()
 else()
     set(SDL_LIB_NAME SDL2d)
+    if(MSVC)
+        set(SDL_MAIN_LIB_NAME SDL2maind)
+    endif()
 endif()
 
-find_library(SDL_LIBRARIES 
+find_library(SDL_LIBRARY 
     NAMES ${SDL_LIB_NAME}
     PATHS ${SDL_ROOT}
-    hints ${SDL_ROOT}/lib
+    HINTS ${SDL_ROOT}/lib
 )
+
+if(SDL_MAIN_LIB_NAME)
+    find_library(SDL_MAIN_LIBRARY
+        NAMES ${SDL_MAIN_LIB_NAME}
+        PATHS ${SDL_ROOT}
+        HINTS ${SDL_ROOT}/lib
+    )
+endif()
+
+message(STATUS "SDL LIBS : ${SDL_LIBRARY};${SDL_MAIN_LIBRARY}")
+
+set(SDL_LIBRARIES "${SDL_LIBRARY};${SDL_MAIN_LIBRARY}")
 
 include(FindPackageHandleStandardArgs)
 
