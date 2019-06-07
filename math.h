@@ -427,10 +427,10 @@ inline mat4x4 rotateZ(float degrees)
     float rad = degrees * PI / 180.f;
 
     return mat4x4 {
-        cos(rad), sin(rad), 0, 0,
-        -sin(rad), cos(rad), 0, 0,
-        0,         0,        1, 0,
-        0,         0,        0, 1
+        cosf(rad),  sinf(rad), 0, 0,
+        -sinf(rad), cosf(rad), 0, 0,
+        0,          0,         1, 0,
+        0,          0,         0, 1
     };
 }
 
@@ -438,10 +438,10 @@ inline mat4x4 rotateY(float degrees)
 {
     float rad = degrees * PI / 180.f;
     return mat4x4 {
-        cos(rad), 0, -sin(rad), 0,
-        0,        1, 0,         0,
-        sin(rad), 0, cos(rad),  0,
-        0,        0, 0,         1
+        cosf(rad), 0, -sinf(rad), 0,
+        0,         1, 0,          0,
+        sinf(rad), 0, cosf(rad),  0,
+        0,         0, 0,          1
     };
 }
 
@@ -449,10 +449,10 @@ inline mat4x4 rotateX(float degrees)
 {
     float rad = degrees * PI / 180.f;
     return mat4x4 {
-        1, 0,         0,         0,
-        0, cos(rad),  sin(rad),  0,
-        0, -sin(rad), cos(rad),  0,
-        0, 0,         0,         1
+        1, 0,          0,          0,
+        0, cosf(rad),  sinf(rad),  0,
+        0, -sinf(rad), cosf(rad),  0,
+        0, 0,          0,          1
     };
 }
 

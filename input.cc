@@ -22,7 +22,6 @@ void pollEvents()
     mouseWheelVSign = 0;
 
     SDL_Event event;
-    int iter = 0;
 	while(SDL_PollEvent(&event)) {
 
         switch(event.type) {

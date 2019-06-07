@@ -38,6 +38,9 @@ struct VertexBuffer
     Vec4 clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
 };
 
+//TODO
+//Assertion `vbuffer.size < MAX_CLIPPED_VERTEX_COUNT' failed.
+
 static void vbPushData(VertexBuffer& vbuffer, const Vec4& data)
 {
     assert(vbuffer.size < MAX_CLIPPED_VERTEX_COUNT);
@@ -54,6 +57,9 @@ static inline bool isVertexInsidePlane(const Vec4& vertex, PlaneBits plane)
         case PLANE_BOTTOM_BIT : return vertex.y >= -vertex.w;
         case PLANE_NEAR_BIT : return vertex.z >= -vertex.w;
         case PLANE_FAR_BIT : return vertex.z <= vertex.w;
+        default : {
+            return false;
+        }
     }
 }
 
@@ -98,7 +104,7 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
     //resetting output buffer
     VertexBuffer out = {};
 
-    for(int i = 0; i < in.size; i++) {
+    for(size_t i = 0; i < in.size; i++) {
         Vec4 endPoint = in.clippedVertices[i];
         if(isVertexInsidePlane(startPoint, clipPlane)) {
             if(isVertexInsidePlane(endPoint, clipPlane)) {
@@ -152,7 +158,7 @@ ClippResult clipTriangle(const Vec4& v1, const Vec4& v2, const Vec4& v3)
     result.numTriangles = in.size - 2;
     Vec4 refPoint = in.clippedVertices[0];
 
-    for(int i = 0; i < result.numTriangles; i++) {
+    for(size_t i = 0; i < result.numTriangles; i++) {
         Triangle& tr = result.triangles[i];
         tr.v1 = refPoint;
         tr.v2 = in.clippedVertices[i + 1]; 

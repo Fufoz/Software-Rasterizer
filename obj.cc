@@ -57,7 +57,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
 
         if(buffer[currIdx] == '/' || buffer[currIdx] == ' ') {
             buffer[currIdx] = '\0';
-            values[valueIdx] = std::atof(buff);
+            values[valueIdx] = atof(buff);
             if(buffer[currIdx + 1] == '/'){
                 buff = &buffer[currIdx] + 2;//step past null tetminated char
                 currIdx++;
@@ -68,7 +68,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
         }
 
         if(buffer[currIdx + 1] == 0) {//eof line check
-            values[valueIdx] = std::atof(buff);
+            values[valueIdx] = atof(buff);
         }
 
         currIdx++;
@@ -79,7 +79,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
             face.vIndex[0] = values[0];
             face.vIndex[1] = values[1];
             face.vIndex[2] = values[2];
-            printf("Face %d %d %d\n",face.vIndex[0], face.vIndex[1], face.vIndex[2]);
+            printf("Face %lu %lu %lu\n",face.vIndex[0], face.vIndex[1], face.vIndex[2]);
             break;
         }
         case PATTERN_VERT_NORM : {
@@ -91,7 +91,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
 
             face.vIndex[2] = values[4];
             face.nIndex[2] = values[5];
-            printf("Face %d//%d %d//%d %d//%d\n",
+            printf("Face %lu//%lu %lu//%lu %lu//%lu\n",
                 face.vIndex[0],face.nIndex[0],
                 face.vIndex[1],face.nIndex[1],
                 face.vIndex[2],face.nIndex[2]);
@@ -106,7 +106,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
 
             face.vIndex[2] = values[4];
             face.tIndex[2] = values[5];
-            printf("Face %d/%d %d/%d %d/%d\n",
+            printf("Face %lu/%lu %lu/%lu %lu/%lu\n",
                 face.vIndex[0],face.tIndex[0],
                 face.vIndex[1],face.tIndex[1],
                 face.vIndex[2],face.tIndex[2]);
@@ -125,14 +125,17 @@ static Face parseFace(FacePattern pattern, char* buffer)
             face.vIndex[2] = values[6];
             face.tIndex[2] = values[7];
             face.nIndex[2] = values[8];
-            printf("Face %d/%d/%d %d/%d/%d %d/%d/%d\n",
+            printf("Face %lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
                 face.vIndex[0], face.tIndex[0],face.nIndex[0],
                 face.vIndex[1], face.tIndex[1], face.nIndex[1],
                 face.vIndex[2], face.tIndex[2], face.nIndex[2]);
 
             break;
         }
-
+        case PATTERN_UNKNOWN : {
+            printf("Faces pattern is unknown!\n");
+            break;
+        }
     }
 
 
@@ -185,9 +188,6 @@ bool load(const char* model, Mesh& data)
     if(!mesh) {
         return false;
     }
-
-    bool hasTextureCoords = false;
-    bool hasNormals = false;
 
     FacePattern ptrn = PATTERN_UNKNOWN;
     Vec3 vertexPosition = {};
@@ -247,7 +247,7 @@ bool load(const char* model, Mesh& data)
         }
     }
     printf("----------------------------------------\n");
-    printf("MESH INFO:\n Faces = %d\n VertexPositions = %d\n Normals = %d\n Texture Coords = %d\n",
+    printf("MESH INFO:\n Faces = %lu\n VertexPositions = %lu\n Normals = %lu\n Texture Coords = %lu\n",
         data.faces.size(), data.vertPos.size(), data.normals.size(), data.texCoord.size());
     printf("----------------------------------------\n");
     fclose(mesh);

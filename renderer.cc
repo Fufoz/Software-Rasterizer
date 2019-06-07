@@ -1,8 +1,9 @@
 #include "renderer.h"
 #include "primitives.h"
 #include "input.h"
-#include <stdio.h>
 #include "camera.h"
+#include <stdio.h>
+#include <limits>
 
 namespace constants {
     mat4x4 viewportTransform;
@@ -125,7 +126,7 @@ void commitFrame(RenderContext* context, const Target& target)
 
 void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
 {
-    mat4x4 modelToWorld = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
+ //   mat4x4 modelToWorld = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     
 }
 

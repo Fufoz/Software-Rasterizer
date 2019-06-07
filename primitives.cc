@@ -102,13 +102,13 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 
     float Z1Z0 = (v1.pos.z - v0.pos.z) / triArea;
     float Z2Z0 = (v2.pos.z - v0.pos.z) / triArea; 
-
+/*TEXTURE HANDLING
     float T1T0x = (v1.texCoords.x - v0.texCoords.x) / triArea;
     float T1T0y = (v1.texCoords.y - v0.texCoords.y) / triArea;
 
     float T2T0x = (v2.texCoords.x - v0.texCoords.x) / triArea;
     float T2T0y = (v2.texCoords.y - v0.texCoords.y) / triArea;
-
+*/
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
@@ -128,10 +128,12 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
                 if(zBuffer[y * surface->w + x] < Z) {
                     
                     zBuffer[y * surface->w + x] = Z;
-                    float Tx = v0.texCoords.x + w1 * T1T0x + w2 * T2T0x;
-                    float Ty = v0.texCoords.y + w1 * T1T0y + w2 * T2T0y;
-                    int texutreOffset = texture.width * std::floor(Ty * texture.height) * 3 + std::floor(Tx * texture.width) * 3;
-                    uint8_t* position = texture.data + texutreOffset;
+
+                    //TEXTURE HANDLING
+                    //float Tx = v0.texCoords.x + w1 * T1T0x + w2 * T2T0x;
+                    //float Ty = v0.texCoords.y + w1 * T1T0y + w2 * T2T0y;
+                    //int texutreOffset = texture.width * std::floor(Ty * texture.height) * 3 + std::floor(Tx * texture.width) * 3;
+                    //uint8_t* position = texture.data + texutreOffset;
                     Vec4 finalColor;
                     //finalColor.R = position[0] * color.R;
                     //finalColor.G = position[1] * color.G;
@@ -188,7 +190,7 @@ void renderTriangle(const SDL_Surface* surface, const mat4x4& viewportTransform,
     //v1 = {2.f, -0.5f, 0.f, 1.f};
     //v2 = {0.f, 1.3f, 0.f, 1.f};
     clipper::ClippResult result = clipper::clipTriangle(v0.pos, v1.pos, v2.pos);
-    for(int i = 0; i < result.numTriangles; i++)
+    for(size_t i = 0; i < result.numTriangles; i++)
         primitives::drawTriangleHalfSpace(surface, viewportTransform, zBuffer, texture,
             Vertex{result.triangles[i].v1, Vec3{}},
             Vertex{result.triangles[i].v2, Vec3{}},

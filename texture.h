@@ -4,8 +4,8 @@
 
 struct Texture
 {
-    size_t width;
-    size_t height;
+    uint32_t width;
+    uint32_t height;
     uint8_t numc;
     uint8_t* data;
 };

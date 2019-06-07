@@ -6,9 +6,11 @@ if(NOT SDL_ROOT)
     message(FATAL "SDL wasn't found")
 endif()
 
-set(SDL_INCLUDE_DIRS ${SDL_ROOT}/include)
-set(SDL_IMPORT_LIBRARY ${SDL_ROOT}/lib/SDL2d.lib ${SDL_ROOT}/lib/SDL2maind.lib)
-set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)
+find_package(SDL REQUIRED)
+
+#set(SDL_INCLUDE_DIRS ${SDL_ROOT}/include)
+#set(SDL_IMPORT_LIBRARY ${SDL_ROOT}/lib/SDL2d.lib ${SDL_ROOT}/lib/SDL2maind.lib)
+#set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)
 
 add_executable(soft
     main.cc
@@ -20,7 +22,11 @@ add_executable(soft
 )
 
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})
-target_link_libraries(soft ${SDL_IMPORT_LIBRARY})
+target_link_libraries(soft PUBLIC ${SDL_LIBRARIES})
+target_compile_options(soft BEFORE PRIVATE -Wall -Werror)
 
 install(TARGETS soft RUNTIME DESTINATION ./bin)
-install(FILES ${SDL_RUNTIME} DESTINATION ./bin)
+
+if(WIN32)
+    install(FILES ${SDL_RUNTIME} DESTINATION ./bin)
+endif()

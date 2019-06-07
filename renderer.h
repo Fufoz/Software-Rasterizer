@@ -10,8 +10,8 @@
 struct Window
 {
     SDL_Window* window;
-    uint32_t width;
-    uint32_t height;
+    int width;
+    int height;
     const char* title;
 };
 
