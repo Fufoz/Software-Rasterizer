@@ -102,11 +102,11 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
         Vec4 endPoint = in.clippedVertices[i];
         if(isVertexInsidePlane(startPoint, clipPlane)) {
             if(isVertexInsidePlane(endPoint, clipPlane)) {
-                printf("CLIPPER: IN_IN\n");
+                //printf("CLIPPER: IN_IN\n");
                 vbPushData(out, endPoint);//IN_IN
             } else {
             //IN_OUT
-                printf("CLIPPER: IN_OUT\n");
+                //printf("CLIPPER: IN_OUT\n");
                 //push straddled point
                 Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
@@ -114,14 +114,14 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
         }
         else{
             if(isVertexInsidePlane(endPoint, clipPlane)) { //OUT_IN
-                printf("CLIPPER: OUT_IN\n"); 
+                //printf("CLIPPER: OUT_IN\n"); 
                 //push straddled point
                 Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
                 //push end Point
                 vbPushData(out, endPoint);
             }else{
-                printf("CLIPPER: OUT_OUT\n");
+                //printf("CLIPPER: OUT_OUT\n");
                 //OUT_OUT
                 //do nothing
             }

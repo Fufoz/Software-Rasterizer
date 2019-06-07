@@ -4,9 +4,25 @@
 #include <stdio.h>
 #include "camera.h"
 
+namespace constants {
+    mat4x4 viewportTransform;
+    Vec4 clearColor;
+};
+
 bool windowClosed()
 {
     return isKeyPressed(BTN_ESCAPE);
+}
+
+void setViewPort(const mat4x4& viewPort)
+{
+    constants::viewportTransform = viewPort;
+}
+
+
+void setClearColor(const Vec4& color)
+{
+    constants::clearColor = color;
 }
 
 static void clearDepthBuffer(std::vector<float>& zBuffer, uint32_t width, uint32_t height)
@@ -44,7 +60,6 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
     context->surface = surface;
     context->window.width = width;
     context->window.height = height;
-    context->window.isRunning = true;
     context->zBuffer.resize(width * height);
     clearDepthBuffer(context->zBuffer, width, height);
     return true;
@@ -65,15 +80,22 @@ void beginFrame(RenderContext* context)
         context->zBuffer.resize(context->window.width * context->window.height);
     }
     clearDepthBuffer(context->zBuffer, context->window.width, context->window.height);
-    SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format, 0, 0, 0, 255));
+    SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format,
+        constants::clearColor.R,
+        constants::clearColor.G,
+        constants::clearColor.B,
+        constants::clearColor.A)
+    );
+    
 }
 
 Camera camera {Vec3{0.f, 0.f, 3.f}, Vec3{0.f, 0.f, -1.f}, Vec3{0.f, 1.f, 0.f}, PROJ_PERSPECTIVE};
 
+//the triangle is more lid the more it's normal is aligned with the light direction
+Vec3 lightDirection = {0, 0, 1.f};
+
 void commitFrame(RenderContext* context, const Target& target)
 {
-    
-    mat4x4 viewportTransform = viewport(context->window.width, context->window.height);
 
     mat4x4 modelWorldTransform = loadScale(Vec3{0.5f, 0.5f, 0.5f});
     updateCameraPosition(&camera);
@@ -82,9 +104,6 @@ void commitFrame(RenderContext* context, const Target& target)
 
     mat4x4 perspective = perspectiveProjection(90.f, context->window.width / context->window.height, 0.1f, 100.f);
     
-    //the triangle is more lid the more it's normal is aligned with the light direction
-    Vec3 lightDirection = {0, 0, 1.f};
-
     for(uint32_t i = 0; i < target.mesh.faces.size(); i++) {
         VertexCoords faceCoords =  grabTriVertexCoord(target.mesh, target.mesh.faces[i]);
         Vec4 v1 = homogenize(faceCoords.first)  * modelWorldTransform * worldCameraTransform * perspective;
@@ -98,10 +117,16 @@ void commitFrame(RenderContext* context, const Target& target)
         Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
         
         if(intensity > 0) {
-            pipeline::renderTriangle(context->surface, viewportTransform, context->zBuffer,
+            pipeline::renderTriangle(context->surface, constants::viewportTransform, context->zBuffer,
                 target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A});
         }
     }
+}
+
+void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
+{
+    mat4x4 modelToWorld = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
+    
 }
 
 void endFrame(RenderContext* context)

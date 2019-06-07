@@ -13,7 +13,6 @@ struct Window
     uint32_t width;
     uint32_t height;
     const char* title;
-    bool isRunning;
 };
 
 struct RenderContext
@@ -21,6 +20,20 @@ struct RenderContext
     std::vector<float> zBuffer;
     SDL_Surface* surface;
     Window window;
+};
+
+struct Transform
+{
+    Vec3 scale;
+    Vec3 rotate;
+    Vec3 translate;
+};
+
+struct RenderObject
+{
+    Mesh mesh;
+    Texture texture;
+    Transform transform;
 };
 
 enum RenderMode
@@ -44,6 +57,10 @@ struct Vertex
 
 bool windowClosed();
 
+void setViewPort(const mat4x4& viewPort);
+
+void setClearColor(const Vec4& color);
+
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height);
 
 void destroySoftwareRenderer(RenderContext* context);
@@ -52,8 +69,9 @@ void beginFrame(RenderContext* context);
 
 void processInput(RenderContext* context);
 
-/*only works with single mesh instance!!!*/
 void commitFrame(RenderContext* context, const Target& target);
+
+void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode);
 
 void endFrame(RenderContext* context);
 
