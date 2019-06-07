@@ -528,4 +528,16 @@ inline Quat operator*(const Quat& left, const Quat& right)
     return out;
 }
 
+inline Quat quatFromAxisAndAngle(const Vec3& axis, float angle)
+{
+    Quat out = {};
+
+    float radians = angle * PI / 180.f;
+    out.complex = axis * sinf(radians/2.f);
+    out.scalar = cosf(radians/2.f);
+
+    return out;
+}
+
+
 #endif
