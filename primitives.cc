@@ -169,9 +169,9 @@ namespace pipeline {
 void renderTriangle(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
-    float triArea = primitives::computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
+    float doubletriArea = primitives::computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
     //backface culling
-    if(triArea < 0)
+    if(doubletriArea < 0)
         return;
 
     if(primitives::isInsideViewFrustum(v0.pos) &&

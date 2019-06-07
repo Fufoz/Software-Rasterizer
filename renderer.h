@@ -24,8 +24,8 @@ struct RenderContext
 
 struct Transform
 {
+    Quat rotate;
     Vec3 scale;
-    Vec3 rotate;
     Vec3 translate;
 };
 

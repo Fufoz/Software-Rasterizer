@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         return -1;
 
     setViewPort(viewport(context.window.width, context.window.height));
-    setClearColor(Vec4{88.f, 93.f, 102.f, 255.f});
+    setClearColor(Vec4{88.f, 93.f, 102.f, 255.f});//grayish
     
     while(!windowClosed()) {
         pollEvents();

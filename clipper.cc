@@ -15,11 +15,6 @@ struct Triangle
     Vec4 v3;
 };
 
-struct ClippResult
-{
-    Triangle triangles[MAX_CLIPPED_TRIANGLE_COUNT];
-    size_t numTriangles;//num vertices - 2
-};
 
 //if all bits are zero then the point is inside the view frustum
 enum PlaneBits
@@ -31,11 +26,18 @@ enum PlaneBits
     PLANE_NEAR_BIT   = 1 << 4,
     PLANE_FAR_BIT    = 1 << 5
 };
+const uint8_t PLANE_COUNT = 6;
 
 struct VertexBuffer
 {
     size_t size;
     Vec4 clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
+};
+
+struct ClippResult
+{
+    Triangle triangles[MAX_CLIPPED_TRIANGLE_COUNT];
+    size_t numTriangles;//num vertices - 2
 };
 
 //TODO
@@ -146,13 +148,13 @@ ClippResult clipTriangle(const Vec4& v1, const Vec4& v2, const Vec4& v3)
     VertexBuffer in = {3, {v1, v2, v3}};
     VertexBuffer out = {};
 
-    out = clipAgainstEdge(in, PLANE_LEFT_BIT);
-    in = clipAgainstEdge(out, PLANE_RIGHT_BIT);
-    out = clipAgainstEdge(in, PLANE_TOP_BIT);
-    in = clipAgainstEdge(out, PLANE_BOTTOM_BIT);
-    out = clipAgainstEdge(in, PLANE_NEAR_BIT);
-    in = clipAgainstEdge(out, PLANE_FAR_BIT);
-    
+    int currentPlane = PLANE_LEFT_BIT;
+    for(int i = 0; i < PLANE_COUNT; i++) {
+        out = clipAgainstEdge(in, (PlaneBits)currentPlane);
+        currentPlane <<= 1;
+        in = out;
+    }
+
     if(in.size == 0)
         return result;
     

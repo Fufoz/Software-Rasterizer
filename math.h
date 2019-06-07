@@ -90,7 +90,22 @@ union Vec4
     inline const float& operator[] (int idx) const { return data[idx];} 
 };
 
-typedef Vec4 Quat;
+union Quat
+{
+    struct {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
+
+    struct {
+        Vec3 complex;
+        float scalar;
+    };
+    
+    Vec4 xyzw;
+};
 
 /*********************VECTOR OPERATIONS************************************/
 
@@ -473,7 +488,7 @@ inline float lerp(float start, float end, float amount)
     return start + amount * (end - start);
 }
 
-inline Vec2 lerp(Vec2 start, Vec2 end, float amount)
+inline Vec2 lerp(const Vec2& start, const Vec2& end, float amount)
 {
     return Vec2 { 
         lerp(start.x, end.x, amount),
@@ -481,7 +496,7 @@ inline Vec2 lerp(Vec2 start, Vec2 end, float amount)
     };
 }
 
-inline Vec3 lerp(Vec3 start, Vec3 end, float amount)
+inline Vec3 lerp(const Vec3& start, const Vec3& end, float amount)
 {
     return Vec3 { 
         lerp(start.x, end.x, amount),
@@ -490,14 +505,27 @@ inline Vec3 lerp(Vec3 start, Vec3 end, float amount)
     };
 }
 
-inline Vec4 lerp(Vec4 start, Vec4 end, float amount)
+inline Vec4 lerp(const Vec4& start, const Vec4& end, float amount)
 {
-    return Vec4 { 
+    return Vec4 {
         lerp(start.x, end.x, amount),
         lerp(start.y, end.y, amount),
         lerp(start.z, end.z, amount),
         lerp(start.w, end.w, amount)
     };
+}
+
+inline Quat conjugate(const Quat& in)
+{
+    return Quat{-in.x, -in.y, -in.z, in.w};
+}
+
+inline Quat operator*(const Quat& left, const Quat& right)
+{
+    Quat out = {};
+    out.complex = left.complex * right.w + right.complex * left.w + cross(left.complex, right.complex);
+    out.w = left.w * right.w - dotVec3(left.complex, right.complex);
+    return out;
 }
 
 #endif
