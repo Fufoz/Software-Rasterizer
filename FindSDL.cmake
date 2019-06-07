@@ -4,7 +4,7 @@
 # Sets the usual variables expected for find_package scripts:
 # SDL_INCLUDE_DIRS - headers location
 # SDL_LIBRARIES - libraries to link against
-# SDL_FOUND - true if Face SDK was found.
+# SDL_FOUND - true if SDL was found.
 
 find_path(SDL_INCLUDE_DIRS
     NAMES SDL2/SDL.h
