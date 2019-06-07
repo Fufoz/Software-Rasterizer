@@ -5,8 +5,8 @@
 #include <cassert>
 namespace clipper{
 
-#define MAX_CLIPPED_TRIANGLE_COUNT 4
-#define MAX_CLIPPED_VERTEX_COUNT 6
+#define MAX_CLIPPED_TRIANGLE_COUNT 5
+#define MAX_CLIPPED_VERTEX_COUNT 7
 
 struct Triangle
 {
@@ -40,6 +40,7 @@ struct VertexBuffer
 
 //TODO
 //Assertion `vbuffer.size < MAX_CLIPPED_VERTEX_COUNT' failed.
+//Upd : probably fixed this, need more tests
 
 static void vbPushData(VertexBuffer& vbuffer, const Vec4& data)
 {

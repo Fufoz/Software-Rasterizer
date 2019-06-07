@@ -12,6 +12,9 @@ find_package(SDL REQUIRED)
 #set(SDL_IMPORT_LIBRARY ${SDL_ROOT}/lib/SDL2d.lib ${SDL_ROOT}/lib/SDL2maind.lib)
 #set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN:${SDL_ROOT}/lib")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 add_executable(soft
     main.cc
     input.cc
