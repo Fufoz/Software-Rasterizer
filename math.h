@@ -107,8 +107,6 @@ union Quat
     Vec4 xyzw;
 };
 
-/*********************VECTOR OPERATIONS************************************/
-
 inline Vec2 operator+(const Vec2& left, const Vec2& right)
 {
     return Vec2{left.x + right.x, left.y + right.y};
@@ -259,7 +257,6 @@ inline Vec4& operator-=(Vec4& self, const Vec4& other)
     return self;
 }
 
-/*********************4x4MAT OPERATIONS************************************/
 inline mat4x4 loadIdentity()
 {
     return mat4x4 {
@@ -515,14 +512,10 @@ inline Vec4 lerp(const Vec4& start, const Vec4& end, float amount)
     };
 }
 
+//For unit quaternions conjugate and inverse are identical
 inline Quat conjugate(const Quat& in)
 {
     return Quat{-in.x, -in.y, -in.z, in.w};
-}
-//For unit quaternions conjugate and inverse are identical
-inline Quat makeInverse(const Quat& in)
-{
-    return conjugate(in);
 }
 
 //A.K.A Hamilton product
@@ -534,17 +527,56 @@ inline Quat operator*(const Quat& left, const Quat& right)
     return out;
 }
 
+inline Quat operator*(const Quat& left, float scalar)
+{    
+    return Quat { left.x * scalar, left.y * scalar, left.z * scalar, left.w * scalar};
+}
+
+inline Quat operator*(float scalar, const Quat& right)
+{
+    return right * scalar;
+}
+
 inline Quat quatFromAxisAndAngle(const Vec3& axis, float angle)
 {
     Quat out = {};
-
     float radians = angle * PI / 180.f;
     out.complex = axis * sinf(radians/2.f);
     out.scalar = cosf(radians/2.f);
-
     return out;
 }
 
+inline Quat slerp(const Quat& first, const Quat& second, float amount)
+{
+    float cosOmega = dotVec4(first.xyzw, second.xyzw);
+    Quat tmp = second;
+
+    //reverse one quat to get shortest arc in 4d
+    if(cosOmega < 0) {
+        tmp = tmp * -1.f;
+        cosOmega = -cosOmega;
+    }
+
+    float k0;
+    float k1;
+
+    if(cosOmega > 0.9999f) {
+        k0 = 1.f - amount;
+        k1 = amount;
+    } else {
+        float sinOmega = sqrt(1.f - cosOmega * cosOmega);
+        float omega = atan2f(sinOmega, cosOmega);
+        float sinOmegaInverted = 1.f / sinOmega;
+        k0 = sin((1 - amount) * omega) * sinOmegaInverted;
+        k1 = sin(omega * amount) * sinOmegaInverted;
+    }
+    Quat out = {};
+    out.x = first.x * k0 + tmp.x * k1;
+    out.y = first.y * k0 + tmp.y * k1;
+    out.z = first.z * k0 + tmp.z * k1;
+    out.w = first.w * k0 + tmp.w * k1;
+    return out;
+}
 
 
 #endif
