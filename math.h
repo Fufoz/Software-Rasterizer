@@ -546,7 +546,8 @@ inline Quat quatFromAxisAndAngle(const Vec3& axis, float angle)
     return out;
 }
 
-inline Quat slerp(const Quat& first, const Quat& second, float amount)
+//spherical linear interpolation
+inline Quat sLerp(const Quat& first, const Quat& second, float amount)
 {
     float cosOmega = dotVec4(first.xyzw, second.xyzw);
     Quat tmp = second;
@@ -559,7 +560,6 @@ inline Quat slerp(const Quat& first, const Quat& second, float amount)
 
     float k0;
     float k1;
-
     if(cosOmega > 0.9999f) {
         k0 = 1.f - amount;
         k1 = amount;
@@ -570,6 +570,7 @@ inline Quat slerp(const Quat& first, const Quat& second, float amount)
         k0 = sin((1 - amount) * omega) * sinOmegaInverted;
         k1 = sin(omega * amount) * sinOmegaInverted;
     }
+
     Quat out = {};
     out.x = first.x * k0 + tmp.x * k1;
     out.y = first.y * k0 + tmp.y * k1;
@@ -578,5 +579,31 @@ inline Quat slerp(const Quat& first, const Quat& second, float amount)
     return out;
 }
 
+mat4x4 quatToRotationMat(const Quat& quat)
+{
+    float xx = quat.x * quat.x;
+    float yy = quat.y * quat.y;
+    float zz = quat.z * quat.z;
+    float xy = quat.x * quat.y;
+    float xz = quat.x * quat.z;
+    float yz = quat.y * quat.z;
+    float wz = quat.w * quat.z;
+    float wy = quat.w * quat.y;
+    float wx = quat.w * quat.x;
+
+    mat4x4 out = loadIdentity();
+    out.p[0] = 1 - 2 * yy - 2 * zz;
+    out.p[5] = 1 - 2 * xx - 2 * zz;
+    out.p[10] = 1 - 2 * xx - 2 * yy;
+
+    out.p[1] = 2 * xy + 2 * wz;
+    out.p[2] = 2 * xz - 2 * wy;
+    out.p[4] = 2 * xy - 2 * wz;
+    out.p[6] = 2 * yz + 2 * wx;
+    out.p[8] = 2 * xz + 2 * wy;
+    out.p[9] = 2 * yz - 2 * wz;
+
+    return out;
+}
 
 #endif
