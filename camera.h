@@ -42,6 +42,6 @@ inline void updateCameraPosition(Camera* camera)
     camera->forward = normaliseVec3(camera->forward * rotateX(-0.5f * mouseDelta.y));
     camera->forward = normaliseVec3(camera->forward);
 
-
+    
 }
 #endif

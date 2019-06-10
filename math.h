@@ -567,8 +567,8 @@ inline Quat sLerp(const Quat& first, const Quat& second, float amount)
         float sinOmega = sqrt(1.f - cosOmega * cosOmega);
         float omega = atan2f(sinOmega, cosOmega);
         float sinOmegaInverted = 1.f / sinOmega;
-        k0 = sin((1 - amount) * omega) * sinOmegaInverted;
-        k1 = sin(omega * amount) * sinOmegaInverted;
+        k0 = sinf((1 - amount) * omega) * sinOmegaInverted;
+        k1 = sinf(omega * amount) * sinOmegaInverted;
     }
 
     Quat out = {};
@@ -579,7 +579,7 @@ inline Quat sLerp(const Quat& first, const Quat& second, float amount)
     return out;
 }
 
-mat4x4 quatToRotationMat(const Quat& quat)
+inline mat4x4 quatToRotationMat(const Quat& quat)
 {
     float xx = quat.x * quat.x;
     float yy = quat.y * quat.y;
