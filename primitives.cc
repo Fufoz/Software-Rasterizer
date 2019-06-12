@@ -69,10 +69,12 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
     float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
-        
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
+    printf("v1 Z %f\n",v0.pos.z);   
+    printf("v2 Z %f\n",v1.pos.z);   
+    printf("v3 Z %f\n",v2.pos.z);   
 
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
@@ -102,7 +104,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
 
-
+bool drawing = true;
     for(int y = topY; y > botY; y--) {
 
         float w0 = w0StartRow;
@@ -112,12 +114,15 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
         for(int x = leftX; x <= rightX; x++) {
         
             if( ((int)w0|(int)w1|(int)w2)>=0) {
+//TODO: fucking z interpolation bullshit
                 float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
+                if( Z < zBuffer[y * surface->w + x]) {
 
-                if( Z > zBuffer[y * surface->w + x]) {
-                    
                     zBuffer[y * surface->w + x] = Z;
-
+if(drawing) {
+printf("drawing with Z %f\n",Z);
+drawing = false;
+}
                     //TEXTURE HANDLING
                     //float Tx = v0.texCoords.x + w1 * T1T0x + w2 * T2T0x;
                     //float Ty = v0.texCoords.y + w1 * T1T0y + w2 * T2T0y;

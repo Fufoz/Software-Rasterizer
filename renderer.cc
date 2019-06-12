@@ -41,7 +41,7 @@ bool windowClosed()
 
 static void clearDepthBuffer(std::vector<float>& zBuffer, uint32_t width, uint32_t height)
 {
-    std::fill(zBuffer.begin(), zBuffer.end(), -std::numeric_limits<float>::max());
+    std::fill(zBuffer.begin(), zBuffer.end(), std::numeric_limits<float>::max());
 }
 
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height)
@@ -140,8 +140,8 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
 
             if( clipper::isInsideViewFrustum(v1) &&
                 clipper::isInsideViewFrustum(v2) &&
-                clipper::isInsideViewFrustum(v3)){
-     printf("v11 Z %f\n",v11.z);           
+                clipper::isInsideViewFrustum(v3)){         
+
                 primitives::drawTriangleHalfSpace(context->surface,
                     globals::viewportTransform, context->zBuffer,
                     *object.texture,
