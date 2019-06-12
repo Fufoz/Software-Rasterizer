@@ -21,6 +21,7 @@ add_executable(soft
     obj.cc
     primitives.cc
     renderer.cc
+    clipper.cc
 )
 
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})

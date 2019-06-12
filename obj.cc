@@ -182,7 +182,7 @@ static FacePattern checkFacePattern(const char* faceString)
     return pattern;
 }
 
-bool load(const char* model, Mesh& data)
+bool loadMesh(const char* model, Mesh* data)
 {
     FILE* mesh = fopen(model, "rb");
     if(!mesh) {
@@ -208,7 +208,7 @@ bool load(const char* model, Mesh& data)
             vertexPosition.y = parceFloat(&local);
             vertexPosition.z = parceFloat(&local);
  
-            data.vertPos.push_back(vertexPosition);
+            data->vertPos.push_back(vertexPosition);
             printf("v %f %f %f\n",vertexPosition.x, vertexPosition.y, vertexPosition.z);
         
         }else if(isTextureCoordinates(buff)){
@@ -218,7 +218,7 @@ bool load(const char* model, Mesh& data)
             textCoord.v = parceFloat(&local);
             textCoord.z = parceFloat(&local);
 
-            data.texCoord.push_back(textCoord);
+            data->texCoord.push_back(textCoord);
             printf("vt %f %f %f\n", textCoord.u, textCoord.v, textCoord.z);
 
         }else if(isVertexNormals(buff)){
@@ -228,7 +228,7 @@ bool load(const char* model, Mesh& data)
             normals.y = parceFloat(&local);
             normals.z = parceFloat(&local);
 
-            data.normals.push_back(normals);
+            data->normals.push_back(normals);
             printf("vn %f %f %f\n", normals.x, normals.y, normals.z);
             
         }else if(isFaces(buff)) {
@@ -243,12 +243,12 @@ bool load(const char* model, Mesh& data)
                 return false;
             }
             face = parseFace(ptrn, local);
-            data.faces.push_back(face);
+            data->faces.push_back(face);
         }
     }
     printf("----------------------------------------\n");
     printf("MESH INFO:\n Faces = %lu\n VertexPositions = %lu\n Normals = %lu\n Texture Coords = %lu\n",
-        data.faces.size(), data.vertPos.size(), data.normals.size(), data.texCoord.size());
+        data->faces.size(), data->vertPos.size(), data->normals.size(), data->texCoord.size());
     printf("----------------------------------------\n");
     fclose(mesh);
     return true;

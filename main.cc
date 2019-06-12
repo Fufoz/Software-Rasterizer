@@ -6,7 +6,7 @@
 #include "math.h"
 #include "input.h"
 #include "renderer.h"
-
+#include "camera.h"
 
 int main(int argc, char **argv)
 {
@@ -14,19 +14,45 @@ int main(int argc, char **argv)
     if(!createSoftwareRenderer(&context,"software renderer", 640, 480))
         return -1;
 
-    Target target = {};
-    if(!load("./resources/rhscube.obj", target.mesh))
-        return -1;
-    if(!loadTexture("./resources/bricks.jpg", &(target.texture)))
-        return -1;
-
+    setPerspective(perspectiveProjection(90.f, context.window.width / context.window.height, 0.1f, 100.f));    
     setViewPort(viewport(context.window.width, context.window.height));
     setClearColor(Vec4{88.f, 93.f, 102.f, 255.f});//grayish
-    
+
+    Camera camera;
+    camera.camPos  = Vec3{0.f, 0.f, 3.f};
+    camera.forward = Vec3{0.f, 0.f, -1.f};
+    camera.up      = Vec3{0.f, 1.f, 0.f};
+    camera.pType   = PROJ_PERSPECTIVE;
+    setCamera(camera);
+
+    RenderObject cube1 = {};
+    RenderObject cube2 = {};
+
+    Texture cubeTexture = {};
+    Mesh cubeMesh = {};
+    if(!loadTexture("./resources/bricks.jpg", &cubeTexture))
+        return -1;
+    if(!loadMesh("./resources/rhscube.obj", &cubeMesh))
+        return -1;
+
+    cube1.mesh = &cubeMesh;
+    cube1.texture = &cubeTexture;
+    cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
+    cube1.transform.translate = Vec3{0.f, 0.f, 0.f};
+
+    cube2.mesh = &cubeMesh;
+    cube2.texture = &cubeTexture;
+    cube2.transform.scale = Vec3{1.5f, 1.5f, 1.5f};
+    cube2.transform.translate = Vec3{0.f, 0.f, 5.f};
+
     while(!windowClosed()) {
         pollEvents();
+        
         beginFrame(&context);
-        commitFrame(&context, target);
+        printf("FIRST\n");
+            renderObject(&context, cube1, RenderMode::MODE_TEXTURED);
+        printf("SECOND\n");
+            renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
         endFrame(&context);
     }
 

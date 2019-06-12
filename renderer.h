@@ -6,6 +6,7 @@
 #include "obj.h"
 #include "math.h"
 #include "texture.h"
+#include "camera.h"
 
 struct Window
 {
@@ -31,8 +32,8 @@ struct Transform
 
 struct RenderObject
 {
-    Mesh mesh;
-    Texture texture;
+    Mesh* mesh;
+    Texture* texture;
     Transform transform;
 };
 
@@ -55,21 +56,24 @@ struct Vertex
     Vec3 texCoords;
 };
 
+
 bool windowClosed();
 
 void setViewPort(const mat4x4& viewPort);
 
 void setClearColor(const Vec4& color);
 
+void setPerspective(const mat4x4& perspective);
+
+void setCamera(Camera& camera);
+
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height);
 
 void destroySoftwareRenderer(RenderContext* context);
 
-void beginFrame(RenderContext* context);
-
 void processInput(RenderContext* context);
 
-void commitFrame(RenderContext* context, const Target& target);
+void beginFrame(RenderContext* context);
 
 void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode);
 

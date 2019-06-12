@@ -11,8 +11,6 @@ enum ProjectionType
     PROJ_PERSPECTIVE,
     PROJ_ORTHOGRAPHIC
 };
-float pitch = 0.f;
-float yaw = -90.f;
 
 struct Camera
 {
@@ -20,10 +18,14 @@ struct Camera
     Vec3 forward;
     Vec3 up;
     ProjectionType pType;
+    mat4x4 worldToCameraTransform;
 };
 
 inline void updateCameraPosition(Camera* camera)
 {
+    static float pitch = 0.f;
+    static float yaw = -90.f;
+
     if(isKeyPressed(BTN_W))//forward
         camera->camPos += CAMERA_SPEED * camera->forward;
     if(isKeyPressed(BTN_A)) // strafe left
@@ -50,23 +52,11 @@ inline void updateCameraPosition(Camera* camera)
     if (pitch < -89.0f)
         pitch = -89.0f;
 
-    auto toRad = [](float degree) {return degree * PI / 180.f;};
-
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));
     camera->forward.z = sin(toRad(yaw)) * cos(toRad(pitch));
     
     camera->forward = normaliseVec3(camera->forward);
-
-   // printf("forward {%f, %f, %f} CamPos {%f, %f, %f}\n",
-   //     camera->forward.x,camera->forward.y,camera->forward.z,
-   //     camera->camPos.x, camera->camPos.y, camera->camPos.z);
-    //if(isMouseBtnPressed(MBTN_LEFT)){
-    //    camera->forward = normaliseVec3(camera->forward * rotateY(-0.5f * mouseDelta.x));
-    //    camera->forward = normaliseVec3(camera->forward * rotateX(-0.5f * mouseDelta.y));
-    //    logMat4x4("Xr",rotateX(-0.5f * mouseDelta.y));
-    //    camera->forward = normaliseVec3(camera->forward);
-    //}
-    
+    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward);    
 }
 #endif

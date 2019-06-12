@@ -5,6 +5,7 @@
 # SDL_INCLUDE_DIRS - headers location
 # SDL_LIBRARIES - libraries to link against
 # SDL_FOUND - true if SDL was found.
+# SDL_RUNTIME - OPTIONAL. only for Windows
 
 find_path(SDL_INCLUDE_DIRS
     NAMES SDL2/SDL.h

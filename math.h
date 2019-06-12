@@ -107,6 +107,11 @@ union Quat
     Vec4 xyzw;
 };
 
+inline float toRad(float degree)
+{
+    return degree * PI / 180.f;
+}
+
 inline Vec2 operator+(const Vec2& left, const Vec2& right)
 {
     return Vec2{left.x + right.x, left.y + right.y};
@@ -479,6 +484,11 @@ template<typename T>
 inline T min(T a, T b)
 {
     return a > b ? b : a;
+}
+
+inline float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
+{
+    return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x  - v0.x) * (v1.y - v0.y); 
 }
 
 inline float lerp(float start, float end, float amount)

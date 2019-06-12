@@ -1,7 +1,7 @@
 #include "primitives.h"
 
 #include <cassert>
-#include "clipper.cc"
+#include "clipper.h"
 
 
 namespace primitives {
@@ -54,11 +54,6 @@ void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec4 c
     }
 }
 
-static float computeArea(Vec3 v0, Vec3 v1, Vec3 v2)
-{
-    return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x  - v0.x) * (v1.y - v0.y); 
-}
-
 void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, Vec4 v0, Vec4 v1, Vec4 v2, Vec4 color)
 {
     v0 = perspectiveDivide(v0) * viewportTransform;
@@ -70,20 +65,14 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
 }
 
-bool isInsideViewFrustum(const Vec4& pos)
-{
-    return pos.x <= pos.w && pos.y <= pos.w && pos.z <= pos.w
-        && pos.x >= -pos.w && pos.y >= -pos.w && pos.z >= -pos.w;
-}
-
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
     float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
         
-    v0.pos = perspectiveDivide(v0.pos)  * viewportTransform;
-    v1.pos = perspectiveDivide(v1.pos)  * viewportTransform;
-    v2.pos = perspectiveDivide(v2.pos)  * viewportTransform;
+    v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
+    v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
+    v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
 
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
@@ -125,7 +114,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
             if( ((int)w0|(int)w1|(int)w2)>=0) {
                 float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
 
-                if(zBuffer[y * surface->w + x] < Z) {
+                if( Z > zBuffer[y * surface->w + x]) {
                     
                     zBuffer[y * surface->w + x] = Z;
 
@@ -162,40 +151,4 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 
 }//primitives
 
-
-
-namespace pipeline {
-
-void renderTriangle(const SDL_Surface* surface, const mat4x4& viewportTransform,
-    std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
-{
-    float doubletriArea = primitives::computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
-    //backface culling
-    if(doubletriArea < 0)
-        return;
-
-    if(primitives::isInsideViewFrustum(v0.pos) &&
-        primitives::isInsideViewFrustum(v1.pos) &&
-        primitives::isInsideViewFrustum(v2.pos)){
-
-        primitives::drawTriangleHalfSpace(surface, viewportTransform, zBuffer, texture,
-            Vertex{v0.pos, Vec3{}},
-            Vertex{v1.pos, Vec3{}},
-            Vertex{v2.pos, Vec3{}},
-            color);
-            return;
-    }
-    
-    //v0 = {2.f, -0.5f, 0.f, 1.f};
-    //v1 = {2.f, -0.5f, 0.f, 1.f};
-    //v2 = {0.f, 1.3f, 0.f, 1.f};
-    clipper::ClippResult result = clipper::clipTriangle(v0.pos, v1.pos, v2.pos);
-    for(size_t i = 0; i < result.numTriangles; i++)
-        primitives::drawTriangleHalfSpace(surface, viewportTransform, zBuffer, texture,
-            Vertex{result.triangles[i].v1, Vec3{}},
-            Vertex{result.triangles[i].v2, Vec3{}},
-            Vertex{result.triangles[i].v3, Vec3{}}, color);
-    }
-
-}
 

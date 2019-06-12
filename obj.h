@@ -36,8 +36,10 @@ struct TriangleTextCoords
     Vec3 third;
 };
 
-bool load(const char* model, Mesh& data);
+bool loadMesh(const char* model, Mesh* data);
+
 VertexCoords grabTriVertexCoord(const Mesh& model, const Face& face);
+
 TriangleTextCoords grabTriTextCoord(const Mesh& model, const Face& face);
 
 #endif

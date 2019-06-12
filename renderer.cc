@@ -2,28 +2,41 @@
 #include "primitives.h"
 #include "input.h"
 #include "camera.h"
+#include "clipper.h"
 #include <stdio.h>
 #include <limits>
 
-namespace constants {
+namespace globals {
     mat4x4 viewportTransform;
+    mat4x4 perspectiveTransform;
     Vec4 clearColor;
+    Camera camera;
 };
+
+
+void setViewPort(const mat4x4& viewPort)
+{
+    globals::viewportTransform = viewPort;
+}
+
+void setCamera(Camera& cam)
+{
+    globals::camera = cam;
+}
+
+void setClearColor(const Vec4& color)
+{
+    globals::clearColor = color;
+}
+
+void setPerspective(const mat4x4& perspective)
+{
+    globals::perspectiveTransform = perspective;
+}
 
 bool windowClosed()
 {
     return isKeyPressed(BTN_ESCAPE);
-}
-
-void setViewPort(const mat4x4& viewPort)
-{
-    constants::viewportTransform = viewPort;
-}
-
-
-void setClearColor(const Vec4& color)
-{
-    constants::clearColor = color;
 }
 
 static void clearDepthBuffer(std::vector<float>& zBuffer, uint32_t width, uint32_t height)
@@ -49,6 +62,8 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
         return false;
     }
 
+    SDL_WarpMouseInWindow(window, width / 2, height / 2);
+    SDL_ShowCursor(0);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     if(!renderer) {
         printf("Failed to create SDL_Renderer!\n");
@@ -82,52 +97,73 @@ void beginFrame(RenderContext* context)
     }
     clearDepthBuffer(context->zBuffer, context->window.width, context->window.height);
     SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format,
-        constants::clearColor.R,
-        constants::clearColor.G,
-        constants::clearColor.B,
-        constants::clearColor.A)
+        globals::clearColor.R,
+        globals::clearColor.G,
+        globals::clearColor.B,
+        globals::clearColor.A)
     );
-    
+
+    updateCameraPosition(&globals::camera);
 }
 
-Camera camera {Vec3{0.f, 0.f, 3.f}, Vec3{0.f, 0.f, -1.f}, Vec3{0.f, 1.f, 0.f}, PROJ_PERSPECTIVE};
 
 //the triangle is more lid the more it's normal is aligned with the light direction
 Vec3 lightDirection = {0, 0, 1.f};
 
-void commitFrame(RenderContext* context, const Target& target)
+void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
 {
-
-    mat4x4 modelWorldTransform = loadScale(Vec3{0.5f, 0.5f, 0.5f});
-    updateCameraPosition(&camera);
+    mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     
-    mat4x4 worldCameraTransform = lookAt(camera.camPos, camera.camPos + camera.forward);    
-
-    mat4x4 perspective = perspectiveProjection(90.f, context->window.width / context->window.height, 0.1f, 100.f);
-    
-    for(uint32_t i = 0; i < target.mesh.faces.size(); i++) {
-        VertexCoords faceCoords =  grabTriVertexCoord(target.mesh, target.mesh.faces[i]);
-        Vec4 v1 = homogenize(faceCoords.first)  * modelWorldTransform * worldCameraTransform * perspective;
-        Vec4 v2 = homogenize(faceCoords.second) * modelWorldTransform * worldCameraTransform * perspective;
-        Vec4 v3 = homogenize(faceCoords.third)  * modelWorldTransform * worldCameraTransform * perspective;
-
+    for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
+        VertexCoords faceCoords = grabTriVertexCoord(*object.mesh, object.mesh->faces[i]);
+        Vec4 v1 = homogenize(faceCoords.first)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        Vec4 v2 = homogenize(faceCoords.second) * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        Vec4 v3 = homogenize(faceCoords.third)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        
+        Vec4 v11 = homogenize(faceCoords.first)  * modelToWorldTransform * globals::camera.worldToCameraTransform;
+        Vec4 v21 = homogenize(faceCoords.second) * modelToWorldTransform * globals::camera.worldToCameraTransform;
+        Vec4 v31 = homogenize(faceCoords.third)  * modelToWorldTransform * globals::camera.worldToCameraTransform;
+        
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
         float intensity = dotVec3(faceNormal, lightDirection);
-        Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
         
         if(intensity > 0) {
-            pipeline::renderTriangle(context->surface, constants::viewportTransform, context->zBuffer,
-                target.texture, Vertex{v1,Vec3{}}, Vertex{v2,Vec3{}}, Vertex{v3,Vec3{}}, Vec4{intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A});
+            Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
+            Vec4 renderColor = {intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A};
+
+            float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
+            //backface culling
+            if(doubletriArea < 0)
+                continue;
+
+            if( clipper::isInsideViewFrustum(v1) &&
+                clipper::isInsideViewFrustum(v2) &&
+                clipper::isInsideViewFrustum(v3)){
+     printf("v11 Z %f\n",v11.z);           
+                primitives::drawTriangleHalfSpace(context->surface,
+                    globals::viewportTransform, context->zBuffer,
+                    *object.texture,
+                    Vertex{v1, Vec3{}},
+                    Vertex{v2, Vec3{}},
+                    Vertex{v3, Vec3{}},
+                    renderColor);
+                    continue;
+            }
+
+            //v0 = {2.f, -0.5f, 0.f, 1.f};
+            //v1 = {2.f, -0.5f, 0.f, 1.f};
+            //v2 = {0.f, 1.3f, 0.f, 1.f};
+            clipper::ClippResult result = clipper::clipTriangle(v1, v2, v3);
+            for(size_t i = 0; i < result.numTriangles; i++)
+                primitives::drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
+                    Vertex{result.triangles[i].v1, Vec3{}},
+                    Vertex{result.triangles[i].v2, Vec3{}},
+                    Vertex{result.triangles[i].v3, Vec3{}}, renderColor);
+
         }
     }
-}
-
-void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
-{
- //   mat4x4 modelToWorld = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
-    
 }
 
 void endFrame(RenderContext* context)

@@ -1,22 +1,10 @@
 
 //clipping stuff
-
-#include "math.h"
+#include "clipper.h"
 #include <cassert>
+
 namespace clipper{
 
-#define MAX_CLIPPED_TRIANGLE_COUNT 5
-#define MAX_CLIPPED_VERTEX_COUNT 7
-
-struct Triangle
-{
-    Vec4 v1;
-    Vec4 v2;
-    Vec4 v3;
-};
-
-
-//if all bits are zero then the point is inside the view frustum
 enum PlaneBits
 {
     PLANE_LEFT_BIT   = 1 << 0,
@@ -34,12 +22,6 @@ struct VertexBuffer
     Vec4 clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
 };
 
-struct ClippResult
-{
-    Triangle triangles[MAX_CLIPPED_TRIANGLE_COUNT];
-    size_t numTriangles;//num vertices - 2
-};
-
 //TODO
 //Assertion `vbuffer.size < MAX_CLIPPED_VERTEX_COUNT' failed.
 //Upd : probably fixed this, need more tests
@@ -49,6 +31,12 @@ static void vbPushData(VertexBuffer& vbuffer, const Vec4& data)
     assert(vbuffer.size < MAX_CLIPPED_VERTEX_COUNT);
     vbuffer.clippedVertices[vbuffer.size] = data;
     vbuffer.size++;
+}
+
+bool isInsideViewFrustum(const Vec4& pos)
+{
+    return pos.x <= pos.w && pos.y <= pos.w && pos.z <= pos.w
+        && pos.x >= -pos.w && pos.y >= -pos.w && pos.z >= -pos.w;
 }
 
 static inline bool isVertexInsidePlane(const Vec4& vertex, PlaneBits plane)
