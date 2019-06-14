@@ -107,8 +107,6 @@ void beginFrame(RenderContext* context)
 }
 
 
-//the triangle is more lid the more it's normal is aligned with the light direction
-Vec3 lightDirection = {0, 0, 1.f};
 
 void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
 {
@@ -124,11 +122,14 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
-        float intensity = dotVec3(faceNormal, lightDirection);
         
-        if(intensity > 0) {
+        //the triangle is more lid the more it's normal is aligned with the light direction
+        Vec3 cameraRay = normaliseVec3(globals::camera.forward - v1.xyz);
+        float intensity = dotVec3(faceNormal, cameraRay);
+        
+        if(intensity < 0.f) {
             Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
-            Vec4 renderColor = {intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A};
+            Vec4 renderColor = {-intensity * pinkColor.R, -intensity * pinkColor.G, -intensity * pinkColor.B, pinkColor.A};
 
             float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
             //backface culling
@@ -138,8 +139,14 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
             //if the whole triangle inside the view frustum
             if( clipper::isInsideViewFrustum(v1) &&
                 clipper::isInsideViewFrustum(v2) &&
-                clipper::isInsideViewFrustum(v3)){         
+                clipper::isInsideViewFrustum(v3)) {
 
+                if(renderMode & MODE_WIREFRAME) {
+                    primitives::drawWireFrame(context->surface, 
+                    globals::viewportTransform, v1, v2, v3,
+                    renderColor);
+                }
+                if(renderMode & MODE_TEXTURED)
                 primitives::drawTriangleHalfSpace(context->surface,
                     globals::viewportTransform, context->zBuffer,
                     *object.texture,
