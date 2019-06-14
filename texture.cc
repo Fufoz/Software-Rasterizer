@@ -22,3 +22,8 @@ bool loadTexture(const char* path, Texture* out, bool flipImage)
     out->data = data;
     return true; 
 }
+
+void unloadTexture(void* handle)
+{
+    stbi_image_free(handle);
+}

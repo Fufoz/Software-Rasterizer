@@ -115,14 +115,11 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
     mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
+        
         VertexCoords faceCoords = grabTriVertexCoord(*object.mesh, object.mesh->faces[i]);
         Vec4 v1 = homogenize(faceCoords.first)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
         Vec4 v2 = homogenize(faceCoords.second) * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
         Vec4 v3 = homogenize(faceCoords.third)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
-        
-        Vec4 v11 = homogenize(faceCoords.first)  * modelToWorldTransform * globals::camera.worldToCameraTransform;
-        Vec4 v21 = homogenize(faceCoords.second) * modelToWorldTransform * globals::camera.worldToCameraTransform;
-        Vec4 v31 = homogenize(faceCoords.third)  * modelToWorldTransform * globals::camera.worldToCameraTransform;
         
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
@@ -137,7 +134,8 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
             //backface culling
             if(doubletriArea < 0)
                 continue;
-
+            
+            //if the whole triangle inside the view frustum
             if( clipper::isInsideViewFrustum(v1) &&
                 clipper::isInsideViewFrustum(v2) &&
                 clipper::isInsideViewFrustum(v3)){         
@@ -149,19 +147,19 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
                     Vertex{v2, Vec3{}},
                     Vertex{v3, Vec3{}},
                     renderColor);
-                    continue;
+
+            } else {//else clip polygon
+
+                //v0 = {2.f, -0.5f, 0.f, 1.f};
+                //v1 = {2.f, -0.5f, 0.f, 1.f};
+                //v2 = {0.f, 1.3f, 0.f, 1.f};
+                clipper::ClippResult result = clipper::clipTriangle(v1, v2, v3);
+                for(size_t i = 0; i < result.numTriangles; i++)
+                    primitives::drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
+                        Vertex{result.triangles[i].v1, Vec3{}},
+                        Vertex{result.triangles[i].v2, Vec3{}},
+                        Vertex{result.triangles[i].v3, Vec3{}}, renderColor);
             }
-
-            //v0 = {2.f, -0.5f, 0.f, 1.f};
-            //v1 = {2.f, -0.5f, 0.f, 1.f};
-            //v2 = {0.f, 1.3f, 0.f, 1.f};
-            clipper::ClippResult result = clipper::clipTriangle(v1, v2, v3);
-            for(size_t i = 0; i < result.numTriangles; i++)
-                primitives::drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
-                    Vertex{result.triangles[i].v1, Vec3{}},
-                    Vertex{result.triangles[i].v2, Vec3{}},
-                    Vertex{result.triangles[i].v3, Vec3{}}, renderColor);
-
         }
     }
 }

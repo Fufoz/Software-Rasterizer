@@ -49,13 +49,12 @@ int main(int argc, char **argv)
         pollEvents();
         
         beginFrame(&context);
-        printf("FIRST\n");
             renderObject(&context, cube1, RenderMode::MODE_TEXTURED);
-        printf("SECOND\n");
             renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
         endFrame(&context);
     }
 
+    unloadTexture(cubeTexture.data);
     destroySoftwareRenderer(&context);
     return 0;
 }

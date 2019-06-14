@@ -11,5 +11,5 @@ struct Texture
 };
 
 bool loadTexture(const char* path, Texture* out, bool flipImage = false);
-
+void unloadTexture(void* handle);
 #endif
