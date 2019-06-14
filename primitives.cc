@@ -68,13 +68,16 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
     std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
-    float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz)/2.f;
+
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
-    printf("v1 Z %f\n",v0.pos.z);   
-    printf("v2 Z %f\n",v1.pos.z);   
-    printf("v3 Z %f\n",v2.pos.z);   
+
+    const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
+    
+    //printf("v1 Z %f\n",v0.pos.z);   
+    //printf("v2 Z %f\n",v1.pos.z);   
+    //printf("v3 Z %f\n",v2.pos.z);   
 
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
@@ -99,7 +102,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 
     float T2T0x = (v2.texCoords.x - v0.texCoords.x) / triArea;
     float T2T0y = (v2.texCoords.y - v0.texCoords.y) / triArea;
-*/
+ */
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
