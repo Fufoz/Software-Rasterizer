@@ -10,9 +10,9 @@ struct Timer {
         m_StartTime = std::chrono::system_clock::now();
     }
 
-    int64_t stopMs()
+    double stopMs()
     {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_StartTime).count();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - m_StartTime).count()/1000000.f;
     }
 
     std::chrono::time_point<std::chrono::system_clock> m_StartTime;

@@ -66,13 +66,28 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
 }
 
 void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
-    std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
+    float* zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
 {
+
+    v0.texCoords.u /= v0.pos.w; 
+    v1.texCoords.u /= v1.pos.w; 
+    v2.texCoords.u /= v2.pos.w; 
+
+    v0.texCoords.v /= v0.pos.w; 
+    v1.texCoords.v /= v1.pos.w; 
+    v2.texCoords.v /= v2.pos.w; 
+
+    v0.texCoords.z = 1.f / v0.pos.w; 
+    v1.texCoords.z = 1.f / v1.pos.w; 
+    v2.texCoords.z = 1.f / v2.pos.w; 
 
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
-
+    printf("Triangle V1: %f %f %f V2: %f %f %f V3: %f %f %f\n",
+        v0.pos.x, v0.pos.y, v0.pos.z,
+        v1.pos.x, v1.pos.y, v1.pos.z,
+        v2.pos.x, v2.pos.y, v2.pos.z);
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
     
     //compute triangle bounding box
@@ -91,14 +106,21 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
     float B20 = v0.pos.x - v2.pos.x;
 
     float Z1Z0 = (v1.pos.z - v0.pos.z) / triArea;
-    float Z2Z0 = (v2.pos.z - v0.pos.z) / triArea; 
-/*TEXTURE HANDLING
+    float Z2Z0 = (v2.pos.z - v0.pos.z) / triArea;
+
+/*TEXTURE HANDLING*/
     float T1T0x = (v1.texCoords.x - v0.texCoords.x) / triArea;
     float T1T0y = (v1.texCoords.y - v0.texCoords.y) / triArea;
 
     float T2T0x = (v2.texCoords.x - v0.texCoords.x) / triArea;
     float T2T0y = (v2.texCoords.y - v0.texCoords.y) / triArea;
- */
+
+    float W1W0 = (v1.texCoords.z - v0.texCoords.z) / triArea;    
+    float W2W0 = (v2.texCoords.z - v0.texCoords.z) / triArea;    
+
+
+//    printf("%f %f %f %f\n",T1T0x,T1T0y,T2T0x,T2T0y);
+    
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
@@ -119,17 +141,24 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
                     zBuffer[y * surface->w + x] = Z;
 
                     //TEXTURE HANDLING
-                    //float Tx = v0.texCoords.x + w1 * T1T0x + w2 * T2T0x;
-                    //float Ty = v0.texCoords.y + w1 * T1T0y + w2 * T2T0y;
-                    //int texutreOffset = texture.width * std::floor(Ty * texture.height) * 3 + std::floor(Tx * texture.width) * 3;
-                    //uint8_t* position = texture.data + texutreOffset;
+                    float invW = v0.texCoords.z + w1 * W1W0 + w2 * W2W0;
+                    float Tx = (v0.texCoords.x + w1 * T1T0x + w2 * T2T0x) / invW;
+                    float Ty = (v0.texCoords.y + w1 * T1T0y + w2 * T2T0y) / invW;
+//                    float Tx = (v0.texCoords.x + w1 * T1T0x + w2 * T2T0x);
+//                    float Ty = (v0.texCoords.y + w1 * T1T0y + w2 * T2T0y);
+
+                    int tx = std::floor(Tx * texture.width);
+                    int ty = std::floor(Ty * texture.height);
+                    int textureOffset = tx * 3 + ty * 3 * texture.width;
+                    uint8_t* position = texture.data + textureOffset;
+
                     Vec4 finalColor;
-                    //finalColor.R = position[0] * color.R;
-                    //finalColor.G = position[1] * color.G;
-                    //finalColor.B = position[2] * color.B;
-                    finalColor.R = color.R;// * 255;
-                    finalColor.G = color.G;// * 255;
-                    finalColor.B = color.B;// * 255;
+                    finalColor.R = position[0];// * color.R;
+                    finalColor.G = position[1];// * color.G;
+                    finalColor.B = position[2];// * color.B;
+  //                  finalColor.R = color.R;
+  //                  finalColor.G = color.G;
+  //                  finalColor.B = color.B;
                     finalColor.A = 255;
 
                     drawPixel(surface, x, y, finalColor);

@@ -47,10 +47,10 @@ inline void updateCameraPosition(Camera* camera)
     pitch += mouseDelta.y * -0.5f;
 
     // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
+//    if (pitch > 89.0f)
+//        pitch = 89.0f;
+//    if (pitch < -89.0f)
+//        pitch = -89.0f;
 
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));

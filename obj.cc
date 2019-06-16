@@ -253,24 +253,3 @@ bool loadMesh(const char* model, Mesh* data)
     fclose(mesh);
     return true;
 }
-
-
-VertexCoords grabTriVertexCoord(const Mesh& model, const Face& face)
-{
-    VertexCoords out = {};
-    out.first  = model.vertPos[face.vIndex[0] - 1];
-    out.second = model.vertPos[face.vIndex[1] - 1];
-    out.third  = model.vertPos[face.vIndex[2] - 1];
-    return out;
-}
-
-TriangleTextCoords grabTriTextCoord(const Mesh& model, const Face& face)
-{
-    TriangleTextCoords out = {};
-    out.first  = model.texCoord[face.tIndex[0] - 1];
-    out.second = model.texCoord[face.tIndex[1] - 1];
-    out.third  = model.texCoord[face.tIndex[2] - 1];
-    return out;
-}
-
-

@@ -10,7 +10,7 @@ namespace primitives {
     void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, Vec4 v0, Vec4 v1, Vec4 v2, Vec4 color);
 
     void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
-        std::vector<float>& zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color);
+        float* zBuffer, const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color);
 }
 
 #endif

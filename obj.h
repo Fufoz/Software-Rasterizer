@@ -22,24 +22,8 @@ struct Mesh
     std::vector<Vec3> texCoord;
 };
 
-struct VertexCoords
-{
-    Vec3 first;
-    Vec3 second;
-    Vec3 third;
-};
-
-struct TriangleTextCoords
-{
-    Vec3 first;
-    Vec3 second;
-    Vec3 third;
-};
 
 bool loadMesh(const char* model, Mesh* data);
 
-VertexCoords grabTriVertexCoord(const Mesh& model, const Face& face);
-
-TriangleTextCoords grabTriTextCoord(const Mesh& model, const Face& face);
 
 #endif

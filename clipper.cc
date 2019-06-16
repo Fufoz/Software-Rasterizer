@@ -19,14 +19,14 @@ const uint8_t PLANE_COUNT = 6;
 struct VertexBuffer
 {
     size_t size;
-    Vec4 clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
+    Vertex clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
 };
 
 //TODO
 //Assertion `vbuffer.size < MAX_CLIPPED_VERTEX_COUNT' failed.
 //Upd : probably fixed this, need more tests
 
-static void vbPushData(VertexBuffer& vbuffer, const Vec4& data)
+static void vbPushData(VertexBuffer& vbuffer, const Vertex& data)
 {
     assert(vbuffer.size < MAX_CLIPPED_VERTEX_COUNT);
     vbuffer.clippedVertices[vbuffer.size] = data;
@@ -54,7 +54,7 @@ static inline bool isVertexInsidePlane(const Vec4& vertex, PlaneBits plane)
     }
 }
 
-static Vec4 intersectPlaneSegment(const Vec4& v1, const Vec4& v2, PlaneBits plane)
+static Vertex intersectPlaneSegment(const Vertex& v1, const Vertex& v2, PlaneBits plane)
 {
 
     float sign = 0.f;
@@ -64,15 +64,15 @@ static Vec4 intersectPlaneSegment(const Vec4& v1, const Vec4& v2, PlaneBits plan
     switch(plane) {
         case PLANE_LEFT_BIT : 
         case PLANE_RIGHT_BIT :
-            val1 = v1.x; val2 = v2.x;
+            val1 = v1.pos.x; val2 = v2.pos.x;
             break;
         case PLANE_TOP_BIT :
         case PLANE_BOTTOM_BIT:
-            val1 = v1.y; val2 = v2.y;
+            val1 = v1.pos.y; val2 = v2.pos.y;
             break;
         case PLANE_FAR_BIT :
         case PLANE_NEAR_BIT :
-            val1 = v1.z; val2 = v2.z;
+            val1 = v1.pos.z; val2 = v2.pos.z;
             break;
     }
 
@@ -82,38 +82,42 @@ static Vec4 intersectPlaneSegment(const Vec4& v1, const Vec4& v2, PlaneBits plan
         sign = -1.f;
     }
 
-    float amount = (v1.w + val1 * sign) / (v1.w  + val1 * sign - v2.w  - val2 * sign);
+    float amount = (v1.pos.w + val1 * sign) / (v1.pos.w  + val1 * sign - v2.pos.w  - val2 * sign);
 
-    return lerp(v1, v2, amount);
+    Vertex straddledVertex = {};
+    straddledVertex.pos = lerp(v1.pos, v2.pos, amount);
+    straddledVertex.texCoords = lerp(v1.texCoords, v2.texCoords, amount);
+
+    return straddledVertex;
 }
 
 static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
 {
     //setting starting point equals to last point in input array
-    Vec4 startPoint = in.clippedVertices[in.size - 1];
+    Vertex startPoint = in.clippedVertices[in.size - 1];
     
     //resetting output buffer
     VertexBuffer out = {};
 
     for(size_t i = 0; i < in.size; i++) {
-        Vec4 endPoint = in.clippedVertices[i];
-        if(isVertexInsidePlane(startPoint, clipPlane)) {
-            if(isVertexInsidePlane(endPoint, clipPlane)) {
+        Vertex endPoint = in.clippedVertices[i];
+        if(isVertexInsidePlane(startPoint.pos, clipPlane)) {
+            if(isVertexInsidePlane(endPoint.pos, clipPlane)) {
                 //printf("CLIPPER: IN_IN\n");
                 vbPushData(out, endPoint);//IN_IN
             } else {
             //IN_OUT
                 //printf("CLIPPER: IN_OUT\n");
                 //push straddled point
-                Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                Vertex straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
             }
         }
         else{
-            if(isVertexInsidePlane(endPoint, clipPlane)) { //OUT_IN
+            if(isVertexInsidePlane(endPoint.pos, clipPlane)) { //OUT_IN
                 //printf("CLIPPER: OUT_IN\n"); 
                 //push straddled point
-                Vec4 straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                Vertex straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
                 //push end Point
                 vbPushData(out, endPoint);
@@ -130,7 +134,7 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
     return out;
 }
 
-ClippResult clipTriangle(const Vec4& v1, const Vec4& v2, const Vec4& v3)
+ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3)
 {
     ClippResult result = {};
     VertexBuffer in = {3, {v1, v2, v3}};
@@ -147,13 +151,20 @@ ClippResult clipTriangle(const Vec4& v1, const Vec4& v2, const Vec4& v3)
         return result;
     
     result.numTriangles = in.size - 2;
-    Vec4 refPoint = in.clippedVertices[0];
+    Vec4 refPoint = in.clippedVertices[0].pos;
+    Vec3 refT = in.clippedVertices[0].texCoords;
 
     for(size_t i = 0; i < result.numTriangles; i++) {
         Triangle& tr = result.triangles[i];
-        tr.v1 = refPoint;
-        tr.v2 = in.clippedVertices[i + 1]; 
-        tr.v3 = in.clippedVertices[i + 2];
+        tr.v1.pos = refPoint;
+        tr.v1.texCoords = refT;
+
+        tr.v2.pos = in.clippedVertices[i + 1].pos; 
+        tr.v3.pos = in.clippedVertices[i + 2].pos;
+
+        tr.v2.texCoords = in.clippedVertices[i + 1].texCoords; 
+        tr.v3.texCoords = in.clippedVertices[i + 2].texCoords;
+
  //       printf("Triangle: v1 : {%f, %f, %f} v2:{%f, %f, %f} v3:{%f, %f, %f}\n",
  //       tr.v1.x,tr.v1.y,tr.v1.z,
  //       tr.v2.x,tr.v2.y,tr.v2.z,

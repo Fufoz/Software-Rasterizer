@@ -18,7 +18,7 @@ struct Window
 
 struct RenderContext
 {
-    std::vector<float> zBuffer;
+    float* zBuffer;
     SDL_Surface* surface;
     Window window;
 };
@@ -44,18 +44,18 @@ enum RenderMode
     MODE_TEXTURED  =  1 << 2
 };
 
-struct Target
-{
-    Mesh mesh;
-    Texture texture;
-};
-
 struct Vertex
 {
     Vec4 pos;
     Vec3 texCoords;
 };
 
+struct Triangle
+{
+    Vertex v1;
+    Vertex v2;
+    Vertex v3;
+};
 
 bool windowClosed();
 

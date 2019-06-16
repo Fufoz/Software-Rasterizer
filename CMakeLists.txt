@@ -8,9 +8,6 @@ endif()
 
 find_package(SDL REQUIRED)
 
-#set(SDL_INCLUDE_DIRS ${SDL_ROOT}/include)
-#set(SDL_IMPORT_LIBRARY ${SDL_ROOT}/lib/SDL2d.lib ${SDL_ROOT}/lib/SDL2maind.lib)
-
 set(CMAKE_INSTALL_RPATH "$ORIGIN:${SDL_ROOT}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 

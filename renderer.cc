@@ -39,9 +39,9 @@ bool windowClosed()
     return isKeyPressed(BTN_ESCAPE);
 }
 
-static void clearDepthBuffer(std::vector<float>& zBuffer, uint32_t width, uint32_t height)
+static void clearDepthBuffer(float* zBuffer, uint32_t width, uint32_t height)
 {
-    std::fill(zBuffer.begin(), zBuffer.end(), std::numeric_limits<float>::max());
+    std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<float>::max());
 }
 
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height)
@@ -76,7 +76,12 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
     context->surface = surface;
     context->window.width = width;
     context->window.height = height;
-    context->zBuffer.resize(width * height);
+
+    float* ptr = (float*)malloc(width * height * sizeof(float));
+    if(!ptr)
+        return false;
+
+    context->zBuffer = ptr;
     clearDepthBuffer(context->zBuffer, width, height);
     return true;
 }
@@ -90,12 +95,18 @@ void destroySoftwareRenderer(RenderContext* context)
 
 void beginFrame(RenderContext* context)
 {
-    if(context->surface->w != context->window.width || context->surface->h != context->window.height){
+    if(context->surface->w != context->window.width || context->surface->h != context->window.height) {
         context->window.width = context->surface->w;
         context->window.height = context->surface->h;
-        context->zBuffer.resize(context->window.width * context->window.height);
+        free(context->zBuffer);
+        float* ptr = (float*)malloc(context->window.width * context->window.height * sizeof(float));
+        assert(ptr);
+        context->zBuffer = ptr;
+        globals::viewportTransform = viewport(context->window.width, context->window.height);
     }
+
     clearDepthBuffer(context->zBuffer, context->window.width, context->window.height);
+
     SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format,
         globals::clearColor.R,
         globals::clearColor.G,
@@ -106,19 +117,41 @@ void beginFrame(RenderContext* context)
     updateCameraPosition(&globals::camera);
 }
 
+static Triangle getTriangle(const Mesh& mesh, const Face& face)
+{
+    Triangle out = {};
+    out.v1.pos  = homogenize(mesh.vertPos[face.vIndex[0] - 1]);
+    out.v2.pos =  homogenize(mesh.vertPos[face.vIndex[1] - 1]);
+    out.v3.pos  = homogenize(mesh.vertPos[face.vIndex[2] - 1]);
 
+    out.v1.texCoords  = mesh.texCoord[face.tIndex[0] - 1];
+    out.v2.texCoords =  mesh.texCoord[face.tIndex[1] - 1];
+    out.v3.texCoords  = mesh.texCoord[face.tIndex[2] - 1];
+
+    return out;
+}
 
 void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
 {
     mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
+
+        Triangle input = getTriangle(*object.mesh, object.mesh->faces[i]);
+        Triangle out = {};
+
+        out.v1.pos = input.v1.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        out.v2.pos = input.v2.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        out.v3.pos = input.v3.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
         
-        VertexCoords faceCoords = grabTriVertexCoord(*object.mesh, object.mesh->faces[i]);
-        Vec4 v1 = homogenize(faceCoords.first)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
-        Vec4 v2 = homogenize(faceCoords.second) * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
-        Vec4 v3 = homogenize(faceCoords.third)  * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        out.v1.texCoords = input.v1.texCoords;
+        out.v2.texCoords = input.v2.texCoords;
+        out.v3.texCoords = input.v3.texCoords;
         
+        const Vec4& v1 = out.v1.pos;
+        const Vec4& v2 = out.v2.pos;
+        const Vec4& v3 = out.v3.pos;
+
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
@@ -128,8 +161,9 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
         float intensity = dotVec3(faceNormal, cameraRay);
         
         if(intensity < 0.f) {
+            intensity = std::abs(intensity);
             Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
-            Vec4 renderColor = {-intensity * pinkColor.R, -intensity * pinkColor.G, -intensity * pinkColor.B, pinkColor.A};
+            Vec4 renderColor = {intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A};
 
             float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
             //backface culling
@@ -140,32 +174,22 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
             if( clipper::isInsideViewFrustum(v1) &&
                 clipper::isInsideViewFrustum(v2) &&
                 clipper::isInsideViewFrustum(v3)) {
-
-                if(renderMode & MODE_WIREFRAME) {
-                    primitives::drawWireFrame(context->surface, 
-                    globals::viewportTransform, v1, v2, v3,
-                    renderColor);
-                }
-                if(renderMode & MODE_TEXTURED)
+                //primitives::drawWireFrame(context->surface, globals::viewportTransform,
+                //out.v1.pos, out.v2.pos, out.v3.pos,renderColor);
                 primitives::drawTriangleHalfSpace(context->surface,
                     globals::viewportTransform, context->zBuffer,
-                    *object.texture,
-                    Vertex{v1, Vec3{}},
-                    Vertex{v2, Vec3{}},
-                    Vertex{v3, Vec3{}},
+                    *object.texture, out.v1, out.v2, out.v3,
                     renderColor);
 
             } else {//else clip polygon
 
-                //v0 = {2.f, -0.5f, 0.f, 1.f};
-                //v1 = {2.f, -0.5f, 0.f, 1.f};
-                //v2 = {0.f, 1.3f, 0.f, 1.f};
-                clipper::ClippResult result = clipper::clipTriangle(v1, v2, v3);
+                clipper::ClippResult result = clipper::clipTriangle(out.v1, out.v2, out.v3);
+
                 for(size_t i = 0; i < result.numTriangles; i++)
                     primitives::drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
-                        Vertex{result.triangles[i].v1, Vec3{}},
-                        Vertex{result.triangles[i].v2, Vec3{}},
-                        Vertex{result.triangles[i].v3, Vec3{}}, renderColor);
+                        result.triangles[i].v1,
+                        result.triangles[i].v2,
+                        result.triangles[i].v3, renderColor);
             }
         }
     }

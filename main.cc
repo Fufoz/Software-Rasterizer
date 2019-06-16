@@ -30,9 +30,9 @@ int main(int argc, char **argv)
 
     Texture cubeTexture = {};
     Mesh cubeMesh = {};
-    if(!loadTexture("./resources/bricks.jpg", &cubeTexture))
+    if(!loadTexture("./resources/Bricks23_col.jpg", &cubeTexture))
         return -1;
-    if(!loadMesh("./resources/rhscube.obj", &cubeMesh))
+    if(!loadMesh("./resources/texturedCube.obj", &cubeMesh))
         return -1;
 
     cube1.mesh = &cubeMesh;
@@ -45,13 +45,20 @@ int main(int argc, char **argv)
     cube2.transform.scale = Vec3{1.5f, 1.5f, 1.5f};
     cube2.transform.translate = Vec3{0.f, 0.f, 5.f};
 
+
+    Timer tick = {};
+
     while(!windowClosed()) {
+        tick.start();
+
         pollEvents();
-        
+
         beginFrame(&context);
             renderObject(&context, cube1, RenderMode::MODE_TEXTURED);
-            renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
+//            renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
         endFrame(&context);
+
+        printf("Frame took %.2f[ms] \n",tick.stopMs());
     }
 
     unloadTexture(cubeTexture.data);
