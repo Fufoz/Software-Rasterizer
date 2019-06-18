@@ -84,10 +84,10 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
-    printf("Triangle V1: %f %f %f V2: %f %f %f V3: %f %f %f\n",
-        v0.pos.x, v0.pos.y, v0.pos.z,
-        v1.pos.x, v1.pos.y, v1.pos.z,
-        v2.pos.x, v2.pos.y, v2.pos.z);
+//    printf("Triangle V1: %f %f %f V2: %f %f %f V3: %f %f %f\n",
+//        v0.pos.x, v0.pos.y, v0.pos.z,
+//        v1.pos.x, v1.pos.y, v1.pos.z,
+//        v2.pos.x, v2.pos.y, v2.pos.z);
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
     
     //compute triangle bounding box
@@ -132,8 +132,8 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
         float w2 = w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
-        
-            if( ((int)w0|(int)w1|(int)w2)>=0) {
+        //((int)w0|(int)w1|(int)w2)>=0
+            if( w0 >=0 && w1>=0 && w2>=0) {
 
                 float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
                 if( Z < zBuffer[y * surface->w + x]) {
@@ -147,8 +147,8 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 //                    float Tx = (v0.texCoords.x + w1 * T1T0x + w2 * T2T0x);
 //                    float Ty = (v0.texCoords.y + w1 * T1T0y + w2 * T2T0y);
 
-                    int tx = std::floor(Tx * texture.width);
-                    int ty = std::floor(Ty * texture.height);
+                    int tx = Tx * (texture.width - 1);
+                    int ty = Ty * (texture.height - 1);
                     int textureOffset = tx * 3 + ty * 3 * texture.width;
                     uint8_t* position = texture.data + textureOffset;
 

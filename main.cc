@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
         beginFrame(&context);
             renderObject(&context, cube1, RenderMode::MODE_TEXTURED);
-//            renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
+            renderObject(&context, cube2, RenderMode::MODE_TEXTURED);
         endFrame(&context);
 
         printf("Frame took %.2f[ms] \n",tick.stopMs());

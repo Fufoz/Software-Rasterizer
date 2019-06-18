@@ -134,7 +134,7 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
 void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
 {
     mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
-    
+
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
 
         Triangle input = getTriangle(*object.mesh, object.mesh->faces[i]);
