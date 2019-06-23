@@ -4,8 +4,6 @@
 #include "clipper.h"
 
 
-namespace primitives {
-
 void drawPixel(const SDL_Surface* surface, int x, int y, Vec4 color)
 {
 
@@ -144,18 +142,15 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
                     float invW = v0.texCoords.z + w1 * W1W0 + w2 * W2W0;
                     float Tx = (v0.texCoords.x + w1 * T1T0x + w2 * T2T0x) / invW;
                     float Ty = (v0.texCoords.y + w1 * T1T0y + w2 * T2T0y) / invW;
-//                    float Tx = (v0.texCoords.x + w1 * T1T0x + w2 * T2T0x);
-//                    float Ty = (v0.texCoords.y + w1 * T1T0y + w2 * T2T0y);
-
                     int tx = Tx * (texture.width - 1);
                     int ty = Ty * (texture.height - 1);
                     int textureOffset = tx * 3 + ty * 3 * texture.width;
                     uint8_t* position = texture.data + textureOffset;
 
                     Vec4 finalColor;
-                    finalColor.R = position[0];// * color.R;
-                    finalColor.G = position[1];// * color.G;
-                    finalColor.B = position[2];// * color.B;
+                    finalColor.R = position[0];// * color.R / 255.f;
+                    finalColor.G = position[1];// * color.G / 255.f;
+                    finalColor.B = position[2];// * color.B / 255.f;
   //                  finalColor.R = color.R;
   //                  finalColor.G = color.G;
   //                  finalColor.B = color.B;
@@ -178,6 +173,5 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 
 }
 
-}//primitives
 
 

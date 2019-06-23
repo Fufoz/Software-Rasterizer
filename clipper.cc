@@ -3,8 +3,6 @@
 #include "clipper.h"
 #include <cassert>
 
-namespace clipper{
-
 enum PlaneBits
 {
     PLANE_LEFT_BIT   = 1 << 0,
@@ -174,5 +172,3 @@ ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3)
     return result;
 }
 
-
-}//!cliper

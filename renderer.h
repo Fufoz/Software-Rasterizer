@@ -57,6 +57,7 @@ struct Triangle
     Vertex v3;
 };
 
+
 bool windowClosed();
 
 void setViewPort(const mat4x4& viewPort);

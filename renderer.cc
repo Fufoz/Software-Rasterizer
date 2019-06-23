@@ -171,22 +171,22 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
                 continue;
             
             //if the whole triangle inside the view frustum
-            if( clipper::isInsideViewFrustum(v1) &&
-                clipper::isInsideViewFrustum(v2) &&
-                clipper::isInsideViewFrustum(v3)) {
-                //primitives::drawWireFrame(context->surface, globals::viewportTransform,
+            if( isInsideViewFrustum(v1) &&
+                isInsideViewFrustum(v2) &&
+                isInsideViewFrustum(v3)) {
+                //drawWireFrame(context->surface, globals::viewportTransform,
                 //out.v1.pos, out.v2.pos, out.v3.pos,renderColor);
-                primitives::drawTriangleHalfSpace(context->surface,
+                drawTriangleHalfSpace(context->surface,
                     globals::viewportTransform, context->zBuffer,
                     *object.texture, out.v1, out.v2, out.v3,
                     renderColor);
 
             } else {//else clip polygon
 
-                clipper::ClippResult result = clipper::clipTriangle(out.v1, out.v2, out.v3);
+                ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
 
                 for(size_t i = 0; i < result.numTriangles; i++)
-                    primitives::drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
+                    drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
                         result.triangles[i].v1,
                         result.triangles[i].v2,
                         result.triangles[i].v3, renderColor);

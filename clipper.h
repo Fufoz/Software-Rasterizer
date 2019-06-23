@@ -2,7 +2,6 @@
 #define CLIPPER_H
 #include "math.h"
 #include "renderer.h"
-namespace clipper {
 
 #define MAX_CLIPPED_TRIANGLE_COUNT 5
 #define MAX_CLIPPED_VERTEX_COUNT 7
@@ -17,5 +16,4 @@ bool isInsideViewFrustum(const Vec4& pos);
 
 ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3);
 
-}//!clipper
 #endif
