@@ -206,6 +206,16 @@ inline Vec3 normaliseVec3(const Vec3& in)
     return Vec3{0.f, 0.f, 0.f};
 }
 
+inline Vec3 normaliseVec4(const Vec3& in)
+{
+    float length = lengthVec3(in);
+    if(length > 0) {
+        float invLength = 1 / length;
+        return Vec3{in.x * invLength, in.y * invLength, in.z * invLength};
+    }
+    return Vec3{0.f, 0.f, 0.f};
+}
+
 inline Vec3 cross(const Vec3& first, const Vec3& second)
 {
     return Vec3{
@@ -423,8 +433,8 @@ inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f
     Vec3 Z  = normaliseVec3(cameraPos - thing);
     Vec3 At = cross(normaliseVec3(UpDir), Z);
     Vec3 Up = cross(Z, At);
-//    printf("Rotation AXIS: Right{%f, %f, %f} Up{%f, %f, %f} Z{%f, %f, %f}\n",
-//    At.x, At.y, At.z, Up.x, Up.y, Up.z, Z.x, Z.y, Z.z);
+    //printf("Rotation AXIS: Right{%f, %f, %f} Up{%f, %f, %f} Z{%f, %f, %f}\n",
+    //At.x, At.y, At.z, Up.x, Up.y, Up.z, Z.x, Z.y, Z.z);
     mat4x4 rotationPart = {
         At.x, Up.x, Z.x, 0,
         At.y, Up.y, Z.y, 0,

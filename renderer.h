@@ -13,7 +13,6 @@ struct Window
     SDL_Window* window;
     int width;
     int height;
-    const char* title;
 };
 
 struct RenderContext
@@ -30,24 +29,28 @@ struct Transform
     Vec3 translate;
 };
 
+enum RenderMode
+{
+    MODE_WIREFRAME = 1 << 0,
+    MODE_DEPTH     = 1 << 1,
+    MODE_FLATCOLOR = 1 << 2,
+    MODE_TEXTURED  = 1 << 3
+};
+
 struct RenderObject
 {
     Mesh* mesh;
     Texture* texture;
     Transform transform;
-};
-
-enum RenderMode
-{
-    MODE_WIREFRAME =  1 << 0,
-    MODE_DEPTH     =  1 << 1,
-    MODE_TEXTURED  =  1 << 2
+    RenderMode mode;
+    Vec3 flatColor = {1.f, 1.f, 1.f};
 };
 
 struct Vertex
 {
     Vec4 pos;
     Vec3 texCoords;
+    Vec3 normal;
 };
 
 struct Triangle
@@ -55,18 +58,27 @@ struct Triangle
     Vertex v1;
     Vertex v2;
     Vertex v3;
+    Vec3 color;
 };
+
+struct RenderState
+{
+    mat4x4 viewportTransform;
+    mat4x4 perspectiveTransform;
+    Vec4 clearColor;
+    Camera camera;
+};
+
+//render State
+extern mat4x4 viewportTransform;
+extern mat4x4 perspectiveTransform;
+extern Vec4 clearColor;
+extern Camera camera;
 
 
 bool windowClosed();
 
-void setViewPort(const mat4x4& viewPort);
-
-void setClearColor(const Vec4& color);
-
-void setPerspective(const mat4x4& perspective);
-
-void setCamera(Camera& camera);
+void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear, const Camera& cam);
 
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height);
 
@@ -76,7 +88,7 @@ void processInput(RenderContext* context);
 
 void beginFrame(RenderContext* context);
 
-void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode);
+void renderObject(RenderContext* context, const RenderObject& object);
 
 void endFrame(RenderContext* context);
 

@@ -42,15 +42,14 @@ inline void updateCameraPosition(Camera* camera)
     
     
     Vec2 mouseDelta = getDeltaMousePosition();
-    
     yaw += mouseDelta.x * 0.5f;
     pitch += mouseDelta.y * -0.5f;
+    
+    if(std::abs(pitch) > 85.f) {
+        pitch = pitch < 0 ? -85.f : 85.f;
+    }
 
-    // make sure that when pitch is out of bounds, screen doesn't get flipped
-//    if (pitch > 89.0f)
-//        pitch = 89.0f;
-//    if (pitch < -89.0f)
-//        pitch = -89.0f;
+    printf("YAW=%f PITCH = %f\n",yaw,pitch);    
 
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));

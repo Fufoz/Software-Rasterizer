@@ -20,10 +20,6 @@ struct VertexBuffer
     Vertex clippedVertices[MAX_CLIPPED_VERTEX_COUNT];
 };
 
-//TODO
-//Assertion `vbuffer.size < MAX_CLIPPED_VERTEX_COUNT' failed.
-//Upd : probably fixed this, need more tests
-
 static void vbPushData(VertexBuffer& vbuffer, const Vertex& data)
 {
     assert(vbuffer.size < MAX_CLIPPED_VERTEX_COUNT);

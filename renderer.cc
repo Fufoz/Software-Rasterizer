@@ -6,32 +6,17 @@
 #include <stdio.h>
 #include <limits>
 
-namespace globals {
-    mat4x4 viewportTransform;
-    mat4x4 perspectiveTransform;
-    Vec4 clearColor;
-    Camera camera;
-};
+mat4x4 viewportTransform = {};
+mat4x4 perspectiveTransform = {};
+Vec4 clearColor = {};
+Camera camera = {};
 
-
-void setViewPort(const mat4x4& viewPort)
+void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear, const Camera& cam)
 {
-    globals::viewportTransform = viewPort;
-}
-
-void setCamera(Camera& cam)
-{
-    globals::camera = cam;
-}
-
-void setClearColor(const Vec4& color)
-{
-    globals::clearColor = color;
-}
-
-void setPerspective(const mat4x4& perspective)
-{
-    globals::perspectiveTransform = perspective;
+    viewportTransform  = viewport;
+    perspectiveTransform = perspective;
+    clearColor = clear;
+    camera = cam;
 }
 
 bool windowClosed()
@@ -95,6 +80,7 @@ void destroySoftwareRenderer(RenderContext* context)
 
 void beginFrame(RenderContext* context)
 {
+    //if window has been resized
     if(context->surface->w != context->window.width || context->surface->h != context->window.height) {
         context->window.width = context->surface->w;
         context->window.height = context->surface->h;
@@ -102,19 +88,19 @@ void beginFrame(RenderContext* context)
         float* ptr = (float*)malloc(context->window.width * context->window.height * sizeof(float));
         assert(ptr);
         context->zBuffer = ptr;
-        globals::viewportTransform = viewport(context->window.width, context->window.height);
+        viewportTransform = viewport(context->window.width, context->window.height);
     }
 
     clearDepthBuffer(context->zBuffer, context->window.width, context->window.height);
 
     SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format,
-        globals::clearColor.R,
-        globals::clearColor.G,
-        globals::clearColor.B,
-        globals::clearColor.A)
+        clearColor.R,
+        clearColor.G,
+        clearColor.B,
+        clearColor.A)
     );
 
-    updateCameraPosition(&globals::camera);
+    updateCameraPosition(&camera);
 }
 
 static Triangle getTriangle(const Mesh& mesh, const Face& face)
@@ -131,7 +117,7 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     return out;
 }
 
-void renderObject(RenderContext* context, const RenderObject& object, RenderMode renderMode)
+void renderObject(RenderContext* context, const RenderObject& object)
 {
     mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
 
@@ -140,9 +126,9 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
         Triangle input = getTriangle(*object.mesh, object.mesh->faces[i]);
         Triangle out = {};
 
-        out.v1.pos = input.v1.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
-        out.v2.pos = input.v2.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
-        out.v3.pos = input.v3.pos * modelToWorldTransform * globals::camera.worldToCameraTransform * globals::perspectiveTransform;
+        out.v1.pos = input.v1.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
+        out.v2.pos = input.v2.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
+        out.v3.pos = input.v3.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
         
         out.v1.texCoords = input.v1.texCoords;
         out.v2.texCoords = input.v2.texCoords;
@@ -157,14 +143,16 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
         
         //the triangle is more lid the more it's normal is aligned with the light direction
-        Vec3 cameraRay = normaliseVec3(globals::camera.forward - v1.xyz);
-        float intensity = dotVec3(faceNormal, cameraRay);
-        
-        if(intensity < 0.f) {
-            intensity = std::abs(intensity);
-            Vec4 pinkColor = {219.f, 112.f, 147.f, 255.f};
-            Vec4 renderColor = {intensity * pinkColor.R, intensity * pinkColor.G, intensity * pinkColor.B, pinkColor.A};
+        Vec3 cameraRay = normaliseVec3(camera.forward - v1.xyz);
+        float diffuse = dotVec3(faceNormal, cameraRay);
+        float ambient = 0.4f;
+        if(diffuse < 0.f) {
+            diffuse = std::abs(diffuse);
+            Vec3 lightColor = {255.f, 250.f, 250.f};//snow
 
+            Vec3 renderColor = diffuse * object.flatColor;
+            //Vec4 objectColor = {219.f, 112.f, 147.f, 255.f};
+            
             float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
             //backface culling
             if(doubletriArea < 0)
@@ -174,25 +162,58 @@ void renderObject(RenderContext* context, const RenderObject& object, RenderMode
             if( isInsideViewFrustum(v1) &&
                 isInsideViewFrustum(v2) &&
                 isInsideViewFrustum(v3)) {
-                //drawWireFrame(context->surface, globals::viewportTransform,
-                //out.v1.pos, out.v2.pos, out.v3.pos,renderColor);
-                drawTriangleHalfSpace(context->surface,
-                    globals::viewportTransform, context->zBuffer,
-                    *object.texture, out.v1, out.v2, out.v3,
-                    renderColor);
+                    switch(object.mode) {
+                        case MODE_WIREFRAME:
+                            drawWireFrame(context->surface, out.v1.pos, out.v2.pos, out.v3.pos, renderColor);
+                            break;
+                        case MODE_FLATCOLOR:
+                            drawTriangleHalfSpaceFlat(context, renderColor, out.v1, out.v2, out.v3);
+                            break;
+                        case MODE_TEXTURED:
+                            drawTriangleHalfSpace(context->surface,
+                                context->zBuffer,
+                                *object.texture, out.v1, out.v2, out.v3,
+                                renderColor);
+                            break;
+                        default:
+                            break;
+                    }
 
             } else {//else clip polygon
 
                 ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
 
-                for(size_t i = 0; i < result.numTriangles; i++)
-                    drawTriangleHalfSpace(context->surface, globals::viewportTransform, context->zBuffer, *object.texture,
-                        result.triangles[i].v1,
-                        result.triangles[i].v2,
-                        result.triangles[i].v3, renderColor);
-            }
-        }
-    }
+                for(size_t i = 0; i < result.numTriangles; i++) {
+                    switch(object.mode) {
+                        case MODE_WIREFRAME:
+                            drawWireFrame(context->surface, result.triangles[i].v1.pos,
+                                result.triangles[i].v2.pos,
+                                result.triangles[i].v3.pos,
+                                renderColor);
+                            break;
+                        case MODE_FLATCOLOR:
+                            drawTriangleHalfSpaceFlat(context, renderColor,
+                                result.triangles[i].v1,
+                                result.triangles[i].v2,
+                                result.triangles[i].v3
+                            );
+                            break;
+                        case MODE_TEXTURED:
+                            drawTriangleHalfSpace(context->surface,
+                                context->zBuffer,
+                                *object.texture,
+                                result.triangles[i].v1,
+                                result.triangles[i].v2,
+                                result.triangles[i].v3,                                
+                                renderColor);
+                            break;
+                        default:
+                            break;
+                    }
+                }//for clip tris
+            }//else
+        }//diffuse check
+    }//main face loop
 }
 
 void endFrame(RenderContext* context)

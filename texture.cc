@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
 bool loadTexture(const char* path, Texture* out, bool flipImage)
 {
     int twidth;

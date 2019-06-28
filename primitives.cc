@@ -4,7 +4,7 @@
 #include "clipper.h"
 
 
-void drawPixel(const SDL_Surface* surface, int x, int y, Vec4 color)
+void drawPixel(const SDL_Surface* surface, int x, int y, Vec3 color)
 {
 
     assert(x < surface->w && y < surface->h);
@@ -15,10 +15,10 @@ void drawPixel(const SDL_Surface* surface, int x, int y, Vec4 color)
 	pixelPtr += surface->w * (surface->h - 1); 
     
     pixelPtr += x - surface->w * y;
-	*pixelPtr = SDL_MapRGBA(surface->format, color.R, color.G, color.B, color.A);
+	*pixelPtr = SDL_MapRGBA(surface->format, color.R, color.G, color.B, 255.f);
 }
 
-void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec4 color)
+void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec3 color)
 {
     bool steep = false;
     if(std::abs(x1 - x0) < std::abs(y1 - y0)) {
@@ -52,7 +52,7 @@ void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec4 c
     }
 }
 
-void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, Vec4 v0, Vec4 v1, Vec4 v2, Vec4 color)
+void drawWireFrame(const SDL_Surface* surface, Vec4 v0, Vec4 v1, Vec4 v2, Vec3 color)
 {
     v0 = perspectiveDivide(v0) * viewportTransform;
     v1 = perspectiveDivide(v1) * viewportTransform;
@@ -63,8 +63,8 @@ void drawWireFrame(const SDL_Surface* surface, const mat4x4& viewportTransform, 
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
 }
 
-void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTransform,
-    float* zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec4 color)
+void drawTriangleHalfSpace(const SDL_Surface* surface,
+    float* zBuffer,const Texture& texture, Vertex v0, Vertex v1, Vertex v2, Vec3 color)
 {
 
     v0.texCoords.u /= v0.pos.w; 
@@ -130,9 +130,8 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
         float w2 = w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
-        //((int)w0|(int)w1|(int)w2)>=0
-            if( w0 >=0 && w1>=0 && w2>=0) {
 
+            if( w0 >=0 && w1>=0 && w2>=0) {
                 float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
                 if( Z < zBuffer[y * surface->w + x]) {
 
@@ -148,15 +147,15 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
                     uint8_t* position = texture.data + textureOffset;
 
                     Vec4 finalColor;
-                    finalColor.R = position[0];// * color.R / 255.f;
-                    finalColor.G = position[1];// * color.G / 255.f;
-                    finalColor.B = position[2];// * color.B / 255.f;
+                    finalColor.R = position[0] * color.R;
+                    finalColor.G = position[1] * color.G;
+                    finalColor.B = position[2] * color.B;
   //                  finalColor.R = color.R;
   //                  finalColor.G = color.G;
   //                  finalColor.B = color.B;
                     finalColor.A = 255;
 
-                    drawPixel(surface, x, y, finalColor);
+                    drawPixel(surface, x, y, finalColor.xyz);
                 }
             }
 
@@ -175,3 +174,62 @@ void drawTriangleHalfSpace(const SDL_Surface* surface, const mat4x4& viewportTra
 
 
 
+void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Vertex v1, Vertex v2)
+{
+    float* zBuffer = context->zBuffer;
+    SDL_Surface* surface = context->surface;
+
+    v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
+    v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
+    v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
+    const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
+    
+    //compute triangle bounding box
+    int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
+    int leftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);
+    int botY   = min(min(v0.pos.y, v1.pos.y), v2.pos.y);
+    int rightX = max(max(v0.pos.x, v1.pos.x), v2.pos.x);
+
+    float A01 = v0.pos.y - v1.pos.y;
+    float B01 = v1.pos.x - v0.pos.x;
+
+    float A12 = v1.pos.y - v2.pos.y;
+    float B12 = v2.pos.x - v1.pos.x;
+
+    float A20 = v2.pos.y - v0.pos.y;
+    float B20 = v0.pos.x - v2.pos.x;
+
+    float Z1Z0 = (v1.pos.z - v0.pos.z) / triArea;
+    float Z2Z0 = (v2.pos.z - v0.pos.z) / triArea;
+    
+    float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
+    float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
+    float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
+
+    for(int y = topY; y > botY; y--) {
+
+        float w0 = w0StartRow;
+        float w1 = w1StartRow;
+        float w2 = w2StartRow;
+
+        for(int x = leftX; x <= rightX; x++) {
+
+            if( w0 >=0 && w1>=0 && w2>=0) {
+                float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
+                if( Z < zBuffer[y * surface->w + x]) {
+                    zBuffer[y * surface->w + x] = Z;
+                    drawPixel(surface, x, y, color);
+                }
+            }
+
+            w0 += A12;
+            w1 += A20;
+            w2 += A01;
+
+        }
+
+        w0StartRow -= B12;
+        w1StartRow -= B20;
+        w2StartRow -= B01;
+    }
+}
