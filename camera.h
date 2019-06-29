@@ -4,7 +4,7 @@
 #include "math.h"
 #include "input.h"
 
-#define CAMERA_SPEED 0.05f
+//#define cameraSpeed 0.05f
 
 enum ProjectionType
 {
@@ -21,23 +21,25 @@ struct Camera
     mat4x4 worldToCameraTransform;
 };
 
-inline void updateCameraPosition(Camera* camera)
+inline void updateCameraPosition(Camera* camera, double deltaTime)
 {
+    const float cameraSpeed = deltaTime * 0.005f;
+//    printf("Camera speed %f\n",cameraSpeed);
     static float pitch = 0.f;
     static float yaw = -90.f;
 
     if(isKeyPressed(BTN_W))//forward
-        camera->camPos += CAMERA_SPEED * camera->forward;
+        camera->camPos += cameraSpeed * camera->forward;
     if(isKeyPressed(BTN_A)) // strafe left
-       camera->camPos -= CAMERA_SPEED * cross(camera->forward, camera->up);
+       camera->camPos -= cameraSpeed * cross(camera->forward, camera->up);
     if(isKeyPressed(BTN_S))//back
-        camera->camPos -= CAMERA_SPEED * camera->forward;
+        camera->camPos -= cameraSpeed * camera->forward;
     if(isKeyPressed(BTN_D)) //strafe right
-        camera->camPos += CAMERA_SPEED * cross(camera->forward, camera->up);
+        camera->camPos += cameraSpeed * cross(camera->forward, camera->up);
     if(isKeyPressed(BTN_SPACE)) //up
-        camera->camPos += CAMERA_SPEED * camera->up;
+        camera->camPos += cameraSpeed * camera->up;
     if(isKeyPressed(BTN_CTRL)) //down
-        camera->camPos -= CAMERA_SPEED * camera->up;
+        camera->camPos -= cameraSpeed * camera->up;
 
     
     
@@ -49,7 +51,7 @@ inline void updateCameraPosition(Camera* camera)
         pitch = pitch < 0 ? -85.f : 85.f;
     }
 
-    printf("YAW=%f PITCH = %f\n",yaw,pitch);    
+//    printf("YAW=%f PITCH = %f\n",yaw,pitch);    
 
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));

@@ -9,14 +9,12 @@
 mat4x4 viewportTransform = {};
 mat4x4 perspectiveTransform = {};
 Vec4 clearColor = {};
-Camera camera = {};
 
-void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear, const Camera& cam)
+void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear)
 {
     viewportTransform  = viewport;
     perspectiveTransform = perspective;
     clearColor = clear;
-    camera = cam;
 }
 
 bool windowClosed()
@@ -99,8 +97,6 @@ void beginFrame(RenderContext* context)
         clearColor.B,
         clearColor.A)
     );
-
-    updateCameraPosition(&camera);
 }
 
 static Triangle getTriangle(const Mesh& mesh, const Face& face)
@@ -117,7 +113,7 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     return out;
 }
 
-void renderObject(RenderContext* context, const RenderObject& object)
+void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera)
 {
     mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
 
@@ -141,19 +137,24 @@ void renderObject(RenderContext* context, const RenderObject& object)
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
-        
+
         //the triangle is more lid the more it's normal is aligned with the light direction
+        //Vec3 avg = (v1.xyz + v2.xyz + v3.xyz);
         Vec3 cameraRay = normaliseVec3(camera.forward - v1.xyz);
         float diffuse = dotVec3(faceNormal, cameraRay);
         float ambient = 0.4f;
-        if(diffuse < 0.f) {
-            diffuse = std::abs(diffuse);
-            Vec3 lightColor = {255.f, 250.f, 250.f};//snow
 
+        //face culling
+        if(diffuse <= 0.f) {
+            diffuse = std::abs(diffuse);
+            Vec3 lightDirection = {0.f, 0.f, -1.f};
             Vec3 renderColor = diffuse * object.flatColor;
             //Vec4 objectColor = {219.f, 112.f, 147.f, 255.f};
             
             float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
+            if(doubletriArea < 0) {
+                printf("WTF\n");
+            }
             //backface culling
             if(doubletriArea < 0)
                 continue;

@@ -73,12 +73,10 @@ struct RenderState
 extern mat4x4 viewportTransform;
 extern mat4x4 perspectiveTransform;
 extern Vec4 clearColor;
-extern Camera camera;
-
 
 bool windowClosed();
 
-void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear, const Camera& cam);
+void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear);
 
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height);
 
@@ -88,7 +86,7 @@ void processInput(RenderContext* context);
 
 void beginFrame(RenderContext* context);
 
-void renderObject(RenderContext* context, const RenderObject& object);
+void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera);
 
 void endFrame(RenderContext* context);
 

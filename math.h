@@ -186,6 +186,16 @@ inline Vec3 operator*(const Vec3& other, float scalar)
     return scalar * other;
 }
 
+inline Vec3 operator/(float scalar,const Vec3& other)
+{
+    return Vec3{scalar / other.x, scalar / other.y, scalar / other.z};
+}
+
+inline Vec3 operator/(const Vec3& other, float scalar)
+{
+    return scalar / other;
+}
+
 inline float dotVec3(const Vec3& left, const Vec3& right)
 {
     return left.x * right.x + left.y * right.y + left.z * right.z; 
@@ -248,6 +258,16 @@ inline Vec4 operator*(float scalar, const Vec4& other)
 inline Vec4 operator*(const Vec4& other, float scalar)
 {
     return scalar * other;
+}
+
+inline Vec4 operator/(float scalar, const Vec4& other)
+{
+    return Vec4{scalar / other.x, scalar / other.y, scalar / other.z, scalar / other.w};
+}
+
+inline Vec4 operator/(const Vec4& other, float scalar)
+{
+    return scalar / other;
 }
 
 inline Vec4 operator+(const Vec4& left, const Vec4& right)
