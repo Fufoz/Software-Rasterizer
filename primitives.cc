@@ -6,7 +6,6 @@
 
 void drawPixel(const SDL_Surface* surface, int x, int y, Vec3 color)
 {
-
     assert(x < surface->w && y < surface->h);
     assert(x >= 0 && y >= 0);
 
@@ -82,12 +81,9 @@ void drawTriangleHalfSpace(const SDL_Surface* surface,
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
-//    printf("Triangle V1: %f %f %f V2: %f %f %f V3: %f %f %f\n",
-//        v0.pos.x, v0.pos.y, v0.pos.z,
-//        v1.pos.x, v1.pos.y, v1.pos.z,
-//        v2.pos.x, v2.pos.y, v2.pos.z);
+
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
-    
+
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
     int leftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);

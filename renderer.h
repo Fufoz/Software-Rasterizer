@@ -58,15 +58,6 @@ struct Triangle
     Vertex v1;
     Vertex v2;
     Vertex v3;
-    Vec3 color;
-};
-
-struct RenderState
-{
-    mat4x4 viewportTransform;
-    mat4x4 perspectiveTransform;
-    Vec4 clearColor;
-    Camera camera;
 };
 
 //render State

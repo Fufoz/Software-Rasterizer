@@ -216,6 +216,17 @@ inline Vec3 normaliseVec3(const Vec3& in)
     return Vec3{0.f, 0.f, 0.f};
 }
 
+inline void normaliseVec3InPlace(Vec3& in)
+{
+    float length = lengthVec3(in);
+    if(length > 0) {
+        float invLength = 1 / length;
+        in.x = in.x * invLength;
+        in.y = in.y * invLength;
+        in.z = in.z * invLength;
+    }
+}
+
 inline Vec3 normaliseVec4(const Vec3& in)
 {
     float length = lengthVec3(in);
@@ -373,6 +384,101 @@ inline mat4x4 perspectiveGL(float FOV, float aspect, float near, float far)
         0,            0,      -(far+near)/(far-near),        -1,
         0,            0,      -2 * far * near / (far - near), 0
     };
+}
+
+inline float determinantSlow(const mat4x4& in)
+{
+    float c11 = in.p[0] * (
+        in.p[5] * (in.p[10] * in.p[15] - in.p[14] * in.p[11]) - 
+        in.p[6] * (in.p[9] * in.p[15] - in.p[13] * in.p[11]) + 
+        in.p[7] * (in.p[9] * in.p[14] - in.p[13] * in.p[10])
+    );
+
+    float c12 = in.p[1] * (
+        in.p[4] * (in.p[10] * in.p[15] - in.p[14] * in.p[11]) - 
+        in.p[6] * (in.p[8] * in.p[15] - in.p[12] * in.p[11]) + 
+        in.p[7] * (in.p[8] * in.p[14] - in.p[12] * in.p[10])
+    );
+
+    float c13 = in.p[2] * (
+        in.p[4] * (in.p[9] * in.p[15] - in.p[13] * in.p[11]) - 
+        in.p[5] * (in.p[8] * in.p[15] - in.p[12] * in.p[11]) + 
+        in.p[7] * (in.p[8] * in.p[13] - in.p[12] * in.p[9])
+    );
+
+    float c14 = in.p[3] * (
+        in.p[4] * (in.p[9] * in.p[14] - in.p[13] * in.p[10]) - 
+        in.p[5] * (in.p[8] * in.p[14] - in.p[12] * in.p[10]) + 
+        in.p[6] * (in.p[8] * in.p[13] - in.p[12] * in.p[9])
+    );
+    return c11 - c12 + c13 - c14;
+}
+
+inline float determinant(const mat4x4& in)
+{
+    float det2x2Mul1 = (in.p[0] * in.p[5] - in.p[4] * in.p[1]) *
+        (in.p[10] * in.p[15] - in.p[14] * in.p[11]);
+        
+    float det2x2Mul2 = (in.p[1] * in.p[6] - in.p[5] * in.p[2]) *
+        (in.p[8] * in.p[15] - in.p[12] * in.p[11]);
+        
+    float det2x2Mul3 = (in.p[2] * in.p[7] - in.p[6] * in.p[3]) *
+        (in.p[8] * in.p[13] - in.p[12] * in.p[9]);
+
+    float det2x2Mul4 = (in.p[1] * in.p[7] - in.p[5] * in.p[3]) *
+        (in.p[8] * in.p[14] - in.p[12] * in.p[10]);
+        
+    float det2x2Mul5 = (in.p[0] * in.p[6] - in.p[4] * in.p[2]) *
+        (in.p[9] * in.p[15] - in.p[13] * in.p[11]);
+        
+    float det2x2Mul6 = (in.p[0] * in.p[7] - in.p[4] * in.p[3]) *
+        (in.p[9] * in.p[14] - in.p[13] * in.p[10]);
+
+    return det2x2Mul1 + det2x2Mul2 + det2x2Mul3 - det2x2Mul4 - det2x2Mul5 + det2x2Mul6;
+}
+
+//taken from : https://www.geometrictools.com/Documentation/LaplaceExpansionTheorem.pdf
+inline mat4x4 inverse(const mat4x4& in)
+{
+    float s0 = in.p[0] * in.p[5] - in.p[4] * in.p[1];
+    float s1 = in.p[0] * in.p[6] - in.p[4] * in.p[2];
+    float s2 = in.p[0] * in.p[7] - in.p[4] * in.p[3];
+    float s3 = in.p[1] * in.p[6] - in.p[5] * in.p[2];
+    float s4 = in.p[1] * in.p[7] - in.p[5] * in.p[3];
+    float s5 = in.p[2] * in.p[7] - in.p[6] * in.p[3];
+
+    float c5 = in.p[10] * in.p[15] - in.p[14] * in.p[11];
+    float c4 = in.p[9] * in.p[15] - in.p[13] * in.p[11];
+    float c3 = in.p[9] * in.p[14] - in.p[13] * in.p[10];
+    float c2 = in.p[8] * in.p[15] - in.p[12] * in.p[11];
+    float c1 = in.p[8] * in.p[14] - in.p[12] * in.p[10];
+    float c0 = in.p[8] * in.p[13] - in.p[12] * in.p[9];
+
+    float invDet = 1.f / (s0*c5 - s1*c4 + s2*c3 +s3*c2 - s4*c1 + s5*c0);
+
+    mat4x4 out = {};
+    
+    out.p[0] = (in.p[5] * c5 - in.p[6] * c4 + in.p[7] * c3)*invDet;
+    out.p[1] = (-in.p[1] * c5 + in.p[2] * c4 - in.p[3] * c3)*invDet;
+    out.p[2] = (in.p[13] * s5 - in.p[14] * s4 + in.p[15] * s3)*invDet;
+    out.p[3] = (-in.p[9] * s5 + in.p[10] * s4 - in.p[11] * s3)*invDet;
+
+    out.p[4] = (-in.p[4] * c5 + in.p[6] * c2 - in.p[7] * c1)*invDet;
+    out.p[5] = (in.p[0] * c5 - in.p[2] * c2 + in.p[3] * c1)*invDet;
+    out.p[6] = (-in.p[12] * s5 + in.p[14] * s2 - in.p[15] * s1)*invDet;
+    out.p[7] = (in.p[8] * s5 - in.p[10] * s2 + in.p[11] * s1)*invDet;
+
+    out.p[8] = (in.p[4] * c4 - in.p[5] * c2 + in.p[7] * c0)*invDet;
+    out.p[9] = (-in.p[0] * c4 + in.p[1] * c2 - in.p[3] * c0)*invDet;
+    out.p[10] =( in.p[12] * s4 - in.p[13] * s2 + in.p[15] * s0)*invDet;
+    out.p[11] =( -in.p[8] * s4 + in.p[9] * s2 - in.p[11] * s0)*invDet;
+
+    out.p[12] = (-in.p[4] * c3 + in.p[5] * c1 - in.p[6] * c0)*invDet;
+    out.p[13] = (in.p[0] * c3 - in.p[1] * c1 + in.p[2] * c0)*invDet;
+    out.p[14] = (-in.p[12] * s3 + in.p[13] * s1 - in.p[14] * s0)*invDet;
+    out.p[15] = (in.p[8] * s3 - in.p[9] * s1 + in.p[10] * s0)*invDet;
+
+    return out;
 }
 
 inline mat4x4 transpose(const mat4x4& in)

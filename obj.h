@@ -23,7 +23,8 @@ struct Mesh
 };
 
 
-bool loadMesh(const char* model, Mesh* data);
 
+bool loadMesh(const char* model, Mesh* data);
+void averageNormals(Mesh* mesh);
 
 #endif

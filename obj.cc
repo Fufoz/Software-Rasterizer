@@ -253,3 +253,36 @@ bool loadMesh(const char* model, Mesh* data)
     fclose(mesh);
     return true;
 }
+
+void averageNormals(Mesh* mesh)
+{
+    mesh->normals.resize(mesh->normals.size() + 2);
+    memset(mesh->normals.data(), 0, mesh->normals.size() * sizeof(Vec3));
+
+    for(uint32_t i = 0; i < mesh->faces.size(); i++) {
+        //grab triangle vertices of current face
+        Vec3& v0 = mesh->vertPos[mesh->faces[i].vIndex[0] - 1];
+        Vec3& v1 = mesh->vertPos[mesh->faces[i].vIndex[1] - 1];
+        Vec3& v2 = mesh->vertPos[mesh->faces[i].vIndex[2] - 1];
+        
+        //compute current face normal
+        Vec3 firstEdge = v1 - v0;
+        Vec3 secondEdge = v2 - v0;
+        Vec3 normal = cross(firstEdge, secondEdge);
+        normaliseVec3InPlace(normal);
+
+        for(int j = 0; j < 3; j++) {
+            mesh->normals[mesh->faces[i].vIndex[j] - 1] += normal;
+            mesh->faces[i].nIndex[j] = mesh->faces[i].vIndex[j];
+        }
+    }
+
+    for(uint32_t i = 0; i < mesh->normals.size(); i++) {
+        normaliseVec3InPlace(mesh->normals[i]);
+    }
+
+    printf("Averaged normals:");
+    for(auto normal : mesh->normals)
+        printf("Normal %f %f %f\n", normal.x, normal.y, normal.z);
+
+}

@@ -110,6 +110,10 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     out.v2.texCoords =  mesh.texCoord[face.tIndex[1] - 1];
     out.v3.texCoords  = mesh.texCoord[face.tIndex[2] - 1];
 
+    out.v1.normal  = mesh.normals[face.nIndex[0] - 1];
+    out.v2.normal =  mesh.normals[face.nIndex[1] - 1];
+    out.v3.normal  = mesh.normals[face.nIndex[2] - 1];
+
     return out;
 }
 
@@ -137,9 +141,9 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
+        Vec3 normalColor = {255.f, 0.f, 0.f};
 
         //the triangle is more lid the more it's normal is aligned with the light direction
-        //Vec3 avg = (v1.xyz + v2.xyz + v3.xyz);
         Vec3 cameraRay = normaliseVec3(camera.forward - v1.xyz);
         float diffuse = dotVec3(faceNormal, cameraRay);
         float ambient = 0.4f;
@@ -151,13 +155,6 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             Vec3 renderColor = diffuse * object.flatColor;
             //Vec4 objectColor = {219.f, 112.f, 147.f, 255.f};
             
-            float doubletriArea = computeArea(v1.xyz, v2.xyz, v2.xyz);
-            if(doubletriArea < 0) {
-                printf("WTF\n");
-            }
-            //backface culling
-            if(doubletriArea < 0)
-                continue;
             
             //if the whole triangle inside the view frustum
             if( isInsideViewFrustum(v1) &&
