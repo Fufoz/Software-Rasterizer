@@ -129,10 +129,14 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         out.v1.pos = input.v1.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
         out.v2.pos = input.v2.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
         out.v3.pos = input.v3.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
-        
+
         out.v1.texCoords = input.v1.texCoords;
         out.v2.texCoords = input.v2.texCoords;
         out.v3.texCoords = input.v3.texCoords;
+
+        out.v1.normal = normaliseVec3(input.v1.normal * inverse(transpose(modelToWorldTransform)) );
+        out.v2.normal = normaliseVec3(input.v2.normal * inverse(transpose(modelToWorldTransform)) );
+        out.v3.normal = normaliseVec3(input.v3.normal * inverse(transpose(modelToWorldTransform)) );
         
         const Vec4& v1 = out.v1.pos;
         const Vec4& v2 = out.v2.pos;

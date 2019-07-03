@@ -40,6 +40,7 @@ int main(int argc, char **argv)
         return -1;
     if(!loadMesh("./resources/texturedCube.obj", &cubeMesh))
         return -1;
+        
     averageNormals(&cubeMesh);
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;

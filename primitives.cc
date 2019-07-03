@@ -169,7 +169,6 @@ void drawTriangleHalfSpace(const SDL_Surface* surface,
 }
 
 
-
 void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Vertex v1, Vertex v2)
 {
     float* zBuffer = context->zBuffer;
