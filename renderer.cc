@@ -105,61 +105,70 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     out.v1.pos  = homogenize(mesh.vertPos[face.vIndex[0] - 1]);
     out.v2.pos =  homogenize(mesh.vertPos[face.vIndex[1] - 1]);
     out.v3.pos  = homogenize(mesh.vertPos[face.vIndex[2] - 1]);
-
+if(face.tIndex[0]) {
     out.v1.texCoords  = mesh.texCoord[face.tIndex[0] - 1];
     out.v2.texCoords =  mesh.texCoord[face.tIndex[1] - 1];
     out.v3.texCoords  = mesh.texCoord[face.tIndex[2] - 1];
-
+}
+if(face.nIndex[0]) {
     out.v1.normal  = mesh.normals[face.nIndex[0] - 1];
     out.v2.normal =  mesh.normals[face.nIndex[1] - 1];
     out.v3.normal  = mesh.normals[face.nIndex[2] - 1];
-
+}
     return out;
 }
 
 void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera)
 {
-    mat4x4 modelToWorldTransform = loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
+    static float x = 0.f;//rotateY(x) *
+    mat4x4 modelToWorldTransform =  loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
+    x+=0.5f;
+    mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
+    mat4x4 normalTransform = inverse(transpose(modelToWorldTransform));
+//    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
 
         Triangle input = getTriangle(*object.mesh, object.mesh->faces[i]);
         Triangle out = {};
 
-        out.v1.pos = input.v1.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
-        out.v2.pos = input.v2.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
-        out.v3.pos = input.v3.pos * modelToWorldTransform * camera.worldToCameraTransform * perspectiveTransform;
+        out.v1.pos = input.v1.pos * modelToWorldTransform;
+        out.v2.pos = input.v2.pos * modelToWorldTransform;
+        out.v3.pos = input.v3.pos * modelToWorldTransform;
+
+        out.v1.normal = normaliseVec3(input.v1.normal * normalTransform);
+        out.v2.normal = normaliseVec3(input.v2.normal * normalTransform);
+        out.v3.normal = normaliseVec3(input.v3.normal * normalTransform);
 
         out.v1.texCoords = input.v1.texCoords;
         out.v2.texCoords = input.v2.texCoords;
         out.v3.texCoords = input.v3.texCoords;
 
-        out.v1.normal = normaliseVec3(input.v1.normal * inverse(transpose(modelToWorldTransform)) );
-        out.v2.normal = normaliseVec3(input.v2.normal * inverse(transpose(modelToWorldTransform)) );
-        out.v3.normal = normaliseVec3(input.v3.normal * inverse(transpose(modelToWorldTransform)) );
-        
-        const Vec4& v1 = out.v1.pos;
-        const Vec4& v2 = out.v2.pos;
-        const Vec4& v3 = out.v3.pos;
+        Vec4& v1 = out.v1.pos;
+        Vec4& v2 = out.v2.pos;
+        Vec4& v3 = out.v3.pos;
 
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
-        Vec3 normalColor = {255.f, 0.f, 0.f};
-
+        //printf("Face normal before %f %f %f\n",faceNormal.x, faceNormal.y, faceNormal.z);
+        //faceNormal = normaliseVec3(0.33333f * (out.v1.normal + out.v2.normal + out.v3.normal)); 
+        //printf("Face normal after %f %f %f\n",faceNormal.x, faceNormal.y, faceNormal.z);
+        
+        Vec3 centroid = (v1.xyz + v2.xyz + v3.xyz) * 0.333f;
         //the triangle is more lid the more it's normal is aligned with the light direction
-        Vec3 cameraRay = normaliseVec3(camera.forward - v1.xyz);
-        float diffuse = dotVec3(faceNormal, cameraRay);
-        float ambient = 0.4f;
+        Vec3 cameraRay = normaliseVec3(camera.camPos - centroid);
+        float lightIntensity = dotVec3(cameraRay, faceNormal);
 
         //face culling
-        if(diffuse <= 0.f) {
-            diffuse = std::abs(diffuse);
-            Vec3 lightDirection = {0.f, 0.f, -1.f};
-            Vec3 renderColor = diffuse * object.flatColor;
-            //Vec4 objectColor = {219.f, 112.f, 147.f, 255.f};
-            
-            
+        if(lightIntensity >= 0.f) {
+            v1 = v1 * VP;
+            v2 = v2 * VP;
+            v3 = v3 * VP;
+
+            lightIntensity = std::abs(lightIntensity);
+            Vec3 renderColor = lightIntensity * object.flatColor;
+
             //if the whole triangle inside the view frustum
             if( isInsideViewFrustum(v1) &&
                 isInsideViewFrustum(v2) &&

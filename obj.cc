@@ -79,7 +79,7 @@ static Face parseFace(FacePattern pattern, char* buffer)
             face.vIndex[0] = values[0];
             face.vIndex[1] = values[1];
             face.vIndex[2] = values[2];
-            printf("Face %lu %lu %lu\n",face.vIndex[0], face.vIndex[1], face.vIndex[2]);
+//            printf("Face %lu %lu %lu\n",face.vIndex[0], face.vIndex[1], face.vIndex[2]);
             break;
         }
         case PATTERN_VERT_NORM : {
@@ -91,10 +91,10 @@ static Face parseFace(FacePattern pattern, char* buffer)
 
             face.vIndex[2] = values[4];
             face.nIndex[2] = values[5];
-            printf("Face %lu//%lu %lu//%lu %lu//%lu\n",
-                face.vIndex[0],face.nIndex[0],
-                face.vIndex[1],face.nIndex[1],
-                face.vIndex[2],face.nIndex[2]);
+//            printf("Face %lu//%lu %lu//%lu %lu//%lu\n",
+//                face.vIndex[0],face.nIndex[0],
+//                face.vIndex[1],face.nIndex[1],
+//                face.vIndex[2],face.nIndex[2]);
             break;
         }
         case PATTERN_VERT_TEXT : {
@@ -106,10 +106,10 @@ static Face parseFace(FacePattern pattern, char* buffer)
 
             face.vIndex[2] = values[4];
             face.tIndex[2] = values[5];
-            printf("Face %lu/%lu %lu/%lu %lu/%lu\n",
-                face.vIndex[0],face.tIndex[0],
-                face.vIndex[1],face.tIndex[1],
-                face.vIndex[2],face.tIndex[2]);
+//            printf("Face %lu/%lu %lu/%lu %lu/%lu\n",
+//                face.vIndex[0],face.tIndex[0],
+//                face.vIndex[1],face.tIndex[1],
+//                face.vIndex[2],face.tIndex[2]);
 
             break;
         }
@@ -125,10 +125,10 @@ static Face parseFace(FacePattern pattern, char* buffer)
             face.vIndex[2] = values[6];
             face.tIndex[2] = values[7];
             face.nIndex[2] = values[8];
-            printf("Face %lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
-                face.vIndex[0], face.tIndex[0],face.nIndex[0],
-                face.vIndex[1], face.tIndex[1], face.nIndex[1],
-                face.vIndex[2], face.tIndex[2], face.nIndex[2]);
+//            printf("Face %lu/%lu/%lu %lu/%lu/%lu %lu/%lu/%lu\n",
+//                face.vIndex[0], face.tIndex[0],face.nIndex[0],
+//                face.vIndex[1], face.tIndex[1], face.nIndex[1],
+//                face.vIndex[2], face.tIndex[2], face.nIndex[2]);
 
             break;
         }
@@ -209,7 +209,7 @@ bool loadMesh(const char* model, Mesh* data)
             vertexPosition.z = parceFloat(&local);
  
             data->vertPos.push_back(vertexPosition);
-            printf("v %f %f %f\n",vertexPosition.x, vertexPosition.y, vertexPosition.z);
+            //printf("v %f %f %f\n",vertexPosition.x, vertexPosition.y, vertexPosition.z);
         
         }else if(isTextureCoordinates(buff)){
             char* local = buff + 3;//skip whitespace and vt tag
@@ -219,7 +219,7 @@ bool loadMesh(const char* model, Mesh* data)
             textCoord.z = parceFloat(&local);
 
             data->texCoord.push_back(textCoord);
-            printf("vt %f %f %f\n", textCoord.u, textCoord.v, textCoord.z);
+            //printf("vt %f %f %f\n", textCoord.u, textCoord.v, textCoord.z);
 
         }else if(isVertexNormals(buff)){
             char* local = buff + 3;//skip whitespace and vn tag
@@ -229,7 +229,7 @@ bool loadMesh(const char* model, Mesh* data)
             normals.z = parceFloat(&local);
 
             data->normals.push_back(normals);
-            printf("vn %f %f %f\n", normals.x, normals.y, normals.z);
+           // printf("vn %f %f %f\n", normals.x, normals.y, normals.z);
             
         }else if(isFaces(buff)) {
             Face face = {};
@@ -267,7 +267,7 @@ void averageNormals(Mesh* mesh)
         
         //compute current face normal
         Vec3 firstEdge = v1 - v0;
-        Vec3 secondEdge = v2 - v0;
+        Vec3 secondEdge = v2 - v1;
         Vec3 normal = cross(firstEdge, secondEdge);
         normaliseVec3InPlace(normal);
 

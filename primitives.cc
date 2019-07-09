@@ -142,16 +142,15 @@ void drawTriangleHalfSpace(const SDL_Surface* surface,
                     int textureOffset = tx * 3 + ty * 3 * texture.width;
                     uint8_t* position = texture.data + textureOffset;
 
-                    Vec4 finalColor;
+                    Vec3 finalColor;
                     finalColor.R = position[0] * color.R;
                     finalColor.G = position[1] * color.G;
                     finalColor.B = position[2] * color.B;
   //                  finalColor.R = color.R;
   //                  finalColor.G = color.G;
   //                  finalColor.B = color.B;
-                    finalColor.A = 255;
 
-                    drawPixel(surface, x, y, finalColor.xyz);
+                    drawPixel(surface, x, y, finalColor);
                 }
             }
 
@@ -174,6 +173,12 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
     float* zBuffer = context->zBuffer;
     SDL_Surface* surface = context->surface;
 
+
+    //preserve depth of a polygon via keeping its z coordinate in clip-space
+    float z0Inv = 1.f / (float)v0.pos.w;
+    float z1Inv = 1.f / (float)v1.pos.w;
+    float z2Inv = 1.f / (float)v2.pos.w;
+
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
@@ -194,9 +199,9 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
     float A20 = v2.pos.y - v0.pos.y;
     float B20 = v0.pos.x - v2.pos.x;
 
-    float Z1Z0 = (v1.pos.z - v0.pos.z) / triArea;
-    float Z2Z0 = (v2.pos.z - v0.pos.z) / triArea;
-    
+    float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
+    float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
+
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
@@ -210,9 +215,15 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
         for(int x = leftX; x <= rightX; x++) {
 
             if( w0 >=0 && w1>=0 && w2>=0) {
-                float Z = v0.pos.z + w1 * Z1Z0 + w2 * Z2Z0;
+                //we're basically interpolating depth values in camera space
+                //to get perspective correct interpolation
+                float Z = z0Inv + w1 * Z1Z0Inv + w2 * Z2Z0Inv;
+                
+                //to get back to screen space
+                Z = 1.f / Z;
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
+                    color = Vec3{Z * 255.f, Z * 255.f, Z * 255.f };
                     drawPixel(surface, x, y, color);
                 }
             }

@@ -23,7 +23,7 @@ struct Camera
 
 inline void updateCameraPosition(Camera* camera, double deltaTime)
 {
-    const float cameraSpeed = deltaTime * 0.005f;
+    const float cameraSpeed = deltaTime * 0.0005f;
 //    printf("Camera speed %f\n",cameraSpeed);
     static float pitch = 0.f;
     static float yaw = -90.f;
@@ -31,17 +31,17 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
     if(isKeyPressed(BTN_W))//forward
         camera->camPos += cameraSpeed * camera->forward;
     if(isKeyPressed(BTN_A)) // strafe left
-       camera->camPos -= cameraSpeed * cross(camera->forward, camera->up);
+       camera->camPos -= cameraSpeed * normaliseVec3(cross(camera->forward, camera->up));
     if(isKeyPressed(BTN_S))//back
         camera->camPos -= cameraSpeed * camera->forward;
     if(isKeyPressed(BTN_D)) //strafe right
-        camera->camPos += cameraSpeed * cross(camera->forward, camera->up);
+        camera->camPos += cameraSpeed * normaliseVec3(cross(camera->forward, camera->up));
     if(isKeyPressed(BTN_SPACE)) //up
         camera->camPos += cameraSpeed * camera->up;
     if(isKeyPressed(BTN_CTRL)) //down
         camera->camPos -= cameraSpeed * camera->up;
 
-    
+    //camera->up = 
     
     Vec2 mouseDelta = getDeltaMousePosition();
     yaw += mouseDelta.x * 0.5f;

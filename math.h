@@ -386,34 +386,6 @@ inline mat4x4 perspectiveGL(float FOV, float aspect, float near, float far)
     };
 }
 
-inline float determinantSlow(const mat4x4& in)
-{
-    float c11 = in.p[0] * (
-        in.p[5] * (in.p[10] * in.p[15] - in.p[14] * in.p[11]) - 
-        in.p[6] * (in.p[9] * in.p[15] - in.p[13] * in.p[11]) + 
-        in.p[7] * (in.p[9] * in.p[14] - in.p[13] * in.p[10])
-    );
-
-    float c12 = in.p[1] * (
-        in.p[4] * (in.p[10] * in.p[15] - in.p[14] * in.p[11]) - 
-        in.p[6] * (in.p[8] * in.p[15] - in.p[12] * in.p[11]) + 
-        in.p[7] * (in.p[8] * in.p[14] - in.p[12] * in.p[10])
-    );
-
-    float c13 = in.p[2] * (
-        in.p[4] * (in.p[9] * in.p[15] - in.p[13] * in.p[11]) - 
-        in.p[5] * (in.p[8] * in.p[15] - in.p[12] * in.p[11]) + 
-        in.p[7] * (in.p[8] * in.p[13] - in.p[12] * in.p[9])
-    );
-
-    float c14 = in.p[3] * (
-        in.p[4] * (in.p[9] * in.p[14] - in.p[13] * in.p[10]) - 
-        in.p[5] * (in.p[8] * in.p[14] - in.p[12] * in.p[10]) + 
-        in.p[6] * (in.p[8] * in.p[13] - in.p[12] * in.p[9])
-    );
-    return c11 - c12 + c13 - c14;
-}
-
 inline float determinant(const mat4x4& in)
 {
     float det2x2Mul1 = (in.p[0] * in.p[5] - in.p[4] * in.p[1]) *
@@ -537,7 +509,7 @@ inline Vec4& operator*=(Vec4& left, const mat4x4& right)
 
 inline Vec3 operator*(const Vec3& left, const mat4x4& right)
 {
-    Vec4 out = {left.x, left.y, left.z, 1.f};
+    Vec4 out = {left.x, left.y, left.z, 0.f};
     out = out * right;
     return out.xyz;
 }
