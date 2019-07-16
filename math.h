@@ -358,7 +358,7 @@ inline mat4x4 frustum(float left, float right, float bottom, float top, float ne
 {
     return mat4x4 {
         (2.f*near)/(right - left),   0,                          0,                          0,
-        0,                         2.f*near/(top-bottom),        (top+bottom)/(top-bottom),  0,
+        0,                         2.f*near/(top-bottom),        0,                          0,
         (right+left)/(right-left), (top+bottom)/(top-bottom),  -(far + near)/(far-near),    -1.f,
         0,                         0,                          (-2.f*far*near)/(far-near),      0
     };
@@ -372,18 +372,6 @@ inline mat4x4 perspectiveProjection(float FOV, float aspect, float near, float f
     h = tan(FOV * 0.5f * PI / 180.f) * near;
     w = h * aspect;
     return frustum(-w, w, -h, h, near, far);
-}
-
-inline mat4x4 perspectiveGL(float FOV, float aspect, float near, float far)
-{
-    float angle = tan(FOV * 0.5f * PI / 180.f); 
-
-    return mat4x4 {
-        angle/aspect, 0,     0,                              0,
-        0,            angle, 0,                              0,
-        0,            0,      -(far+near)/(far-near),        -1,
-        0,            0,      -2 * far * near / (far - near), 0
-    };
 }
 
 inline float determinant(const mat4x4& in)

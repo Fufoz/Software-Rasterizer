@@ -166,7 +166,7 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             v2 = v2 * VP;
             v3 = v3 * VP;
 
-            lightIntensity = std::abs(lightIntensity);
+            //lightIntensity = std::abs(lightIntensity);
             Vec3 renderColor = lightIntensity * object.flatColor;
 
             //if the whole triangle inside the view frustum

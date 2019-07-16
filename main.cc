@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
     RenderContext context = {};
-    if(!createSoftwareRenderer(&context,"software renderer", 640, 480))
+    if(!createSoftwareRenderer(&context,"software renderer", 1920, 1080))
         return -1;
 
     Camera camera;
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     camera.pType   = PROJ_PERSPECTIVE;
     
     Vec4 clrColor = Vec4{88.f, 93.f, 102.f, 255.f};
-    mat4x4 perspective = perspectiveProjection(60.f, context.window.width / context.window.height, 0.1f, 100.f);
+    mat4x4 perspective = perspectiveProjection(60.f, context.window.width / context.window.height, 0.1f, 10.f);
     mat4x4 viewPort = viewport(context.window.width, context.window.height);
     setRenderState(viewPort, perspective, clrColor);
 
@@ -35,7 +35,6 @@ int main(int argc, char **argv)
     if(!loadMesh("./resources/monkey.obj", &cubeMesh))
         return -1;
     
-    //averageNormals(&cubeMesh);
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;
     cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
@@ -63,7 +62,7 @@ int main(int argc, char **argv)
             renderObject(&context, cube2, camera);
         endFrame(&context);
         deltaTime = tick.stopMs();
-        //printf("Frame took %.2f[ms] \n",deltaTime);
+        printf("Frame took %.2f[ms] \n",deltaTime);
     }
 
     unloadTexture(cubeTexture.data);

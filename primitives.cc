@@ -173,12 +173,11 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
     float* zBuffer = context->zBuffer;
     SDL_Surface* surface = context->surface;
 
-
     //preserve depth of a polygon via keeping its z coordinate in clip-space
-    float z0Inv = 1.f / (float)v0.pos.w;
-    float z1Inv = 1.f / (float)v1.pos.w;
-    float z2Inv = 1.f / (float)v2.pos.w;
-
+    float z0Inv = 1.f / (float)v0.pos.z;
+    float z1Inv = 1.f / (float)v1.pos.z;
+    float z2Inv = 1.f / (float)v2.pos.z;
+    
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
@@ -223,6 +222,10 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
                 Z = 1.f / Z;
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
+
+                    //normalise z values between 0 and 1
+                    Z = (Z - 0.1f) / (10.f - 0.1f);
+                    //printf("Z to show: %f\n",Z);
                     color = Vec3{Z * 255.f, Z * 255.f, Z * 255.f };
                     drawPixel(surface, x, y, color);
                 }
