@@ -212,7 +212,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
         float w2 = w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
-
+//proper fill rule handling is too time consuming in tight rasterizer loops
             if( w0 >=0 && w1>=0 && w2>=0) {
                 //we're basically interpolating depth values in camera space
                 //to get perspective correct interpolation
