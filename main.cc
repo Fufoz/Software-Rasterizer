@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
     RenderContext context = {};
-    if(!createSoftwareRenderer(&context,"software renderer", 1920, 1080))
+    if(!createSoftwareRenderer(&context,"software renderer", 640, 480))
         return -1;
 
     Camera camera;

@@ -193,7 +193,7 @@ inline Vec3 operator/(float scalar,const Vec3& other)
 
 inline Vec3 operator/(const Vec3& other, float scalar)
 {
-    return scalar / other;
+    return Vec3{other.x / scalar, other.y / scalar, other.z / scalar};
 }
 
 inline float dotVec3(const Vec3& left, const Vec3& right)

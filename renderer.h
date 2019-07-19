@@ -51,6 +51,7 @@ struct Vertex
     Vec4 pos;
     Vec3 texCoords;
     Vec3 normal;
+    Vec3 color;
 };
 
 struct Triangle

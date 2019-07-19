@@ -81,6 +81,7 @@ static Vertex intersectPlaneSegment(const Vertex& v1, const Vertex& v2, PlaneBit
     Vertex straddledVertex = {};
     straddledVertex.pos = lerp(v1.pos, v2.pos, amount);
     straddledVertex.texCoords = lerp(v1.texCoords, v2.texCoords, amount);
+    straddledVertex.color = lerp(v1.color, v2.color, amount);
 
     return straddledVertex;
 }
@@ -103,7 +104,7 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
             //IN_OUT
                 //printf("CLIPPER: IN_OUT\n");
                 //push straddled point
-                Vertex straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                Vertex straddledPoint = intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
             }
         }
@@ -111,7 +112,7 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
             if(isVertexInsidePlane(endPoint.pos, clipPlane)) { //OUT_IN
                 //printf("CLIPPER: OUT_IN\n"); 
                 //push straddled point
-                Vertex straddledPoint =  intersectPlaneSegment(startPoint, endPoint, clipPlane);
+                Vertex straddledPoint = intersectPlaneSegment(startPoint, endPoint, clipPlane);
                 vbPushData(out, straddledPoint);
                 //push end Point
                 vbPushData(out, endPoint);
@@ -145,19 +146,25 @@ ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3)
         return result;
     
     result.numTriangles = in.size - 2;
+
     Vec4 refPoint = in.clippedVertices[0].pos;
     Vec3 refT = in.clippedVertices[0].texCoords;
+    Vec3 refC = in.clippedVertices[0].color;
 
     for(size_t i = 0; i < result.numTriangles; i++) {
         Triangle& tr = result.triangles[i];
         tr.v1.pos = refPoint;
         tr.v1.texCoords = refT;
+        tr.v1.color = refC;
 
         tr.v2.pos = in.clippedVertices[i + 1].pos; 
         tr.v3.pos = in.clippedVertices[i + 2].pos;
 
         tr.v2.texCoords = in.clippedVertices[i + 1].texCoords; 
         tr.v3.texCoords = in.clippedVertices[i + 2].texCoords;
+
+        tr.v2.color = in.clippedVertices[i + 1].color; 
+        tr.v3.color = in.clippedVertices[i + 2].color;
 
  //       printf("Triangle: v1 : {%f, %f, %f} v2:{%f, %f, %f} v3:{%f, %f, %f}\n",
  //       tr.v1.x,tr.v1.y,tr.v1.z,

@@ -167,8 +167,7 @@ void drawTriangleHalfSpace(const SDL_Surface* surface,
 
 }
 
-
-void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Vertex v1, Vertex v2)
+void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
     float* zBuffer = context->zBuffer;
     SDL_Surface* surface = context->surface;
@@ -182,13 +181,15 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
-    
+    if(triArea < 0)
+        return;    
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
     int leftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);
     int botY   = min(min(v0.pos.y, v1.pos.y), v2.pos.y);
     int rightX = max(max(v0.pos.x, v1.pos.x), v2.pos.x);
 
+    //calculate row and column step in barycentric coordinates
     float A01 = v0.pos.y - v1.pos.y;
     float B01 = v1.pos.x - v0.pos.x;
 
@@ -200,6 +201,12 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
 
     float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
     float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
+
+    if(shader.interpContext.interpFeatures & FEATURE_HAS_COLOR_BIT) {
+        shader.interpContext.beginCoeffs.color = v0.color;
+        shader.interpContext.C1C0 = (v1.color - v0.color)/ triArea;
+        shader.interpContext.C2C0 = (v2.color - v0.color)/ triArea;
+    }
 
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
@@ -213,21 +220,19 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vec3 color, Vertex v0, Ve
 
         for(int x = leftX; x <= rightX; x++) {
 //proper fill rule handling is too time consuming in tight rasterizer loops
-            if( w0 >=0 && w1>=0 && w2>=0) {
+            if( w0 >=0 && w1>=0 && w2>=0) {              
                 //we're basically interpolating depth values in camera space
                 //to get perspective correct interpolation
                 float Z = z0Inv + w1 * Z1Z0Inv + w2 * Z2Z0Inv;
-                
                 //to get back to screen space
                 Z = 1.f / Z;
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
-
-                    //normalise z values between 0 and 1
-                    Z = (Z - 0.1f) / (10.f - 0.1f);
-                    //printf("Z to show: %f\n",Z);
-                    color = Vec3{Z * 255.f, Z * 255.f, Z * 255.f };
-                    drawPixel(surface, x, y, color);
+                    Vec3 gl_pixelCoord = {x, y, Z};  
+                    shader.interpContext.w1 = w1;
+                    shader.interpContext.w2 = w2;
+                    Vec3 finalColor = shader.fragmentShader(gl_pixelCoord);
+                    drawPixel(surface, x, y, finalColor);
                 }
             }
 

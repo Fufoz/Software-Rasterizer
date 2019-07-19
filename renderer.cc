@@ -5,6 +5,7 @@
 #include "clipper.h"
 #include <stdio.h>
 #include <limits>
+#include "shaders.h"
 
 mat4x4 viewportTransform = {};
 mat4x4 perspectiveTransform = {};
@@ -125,6 +126,12 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     x+=0.5f;
     mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
     mat4x4 normalTransform = inverse(transpose(modelToWorldTransform));
+    //DepthShader shader = {};
+    GouraudShader shader = {};
+    //FlatShader shader = {};
+    shader.in_VP = VP;
+    shader.in_ambient = {43.f, 124.f, 44.f};
+    shader.interpContext.interpFeatures = FEATURE_HAS_COLOR_BIT;
 //    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
@@ -162,23 +169,26 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 
         //face culling
         if(lightIntensity >= 0.f) {
-            v1 = v1 * VP;
-            v2 = v2 * VP;
-            v3 = v3 * VP;
+            //shader.intensity = lightIntensity;
+            shader.in_lightVector = cameraRay;
+                      
+            out.v1 = shader.vertexShader(out.v1);//v1 * VP;
+            out.v2 = shader.vertexShader(out.v2);//v2 * VP;
+            out.v3 = shader.vertexShader(out.v3);//v3 * VP;
 
             //lightIntensity = std::abs(lightIntensity);
             Vec3 renderColor = lightIntensity * object.flatColor;
 
             //if the whole triangle inside the view frustum
-            if( isInsideViewFrustum(v1) &&
-                isInsideViewFrustum(v2) &&
-                isInsideViewFrustum(v3)) {
+            if( isInsideViewFrustum(out.v1.pos) &&
+                isInsideViewFrustum(out.v2.pos) &&
+                isInsideViewFrustum(out.v3.pos)) {
                     switch(object.mode) {
                         case MODE_WIREFRAME:
                             drawWireFrame(context->surface, out.v1.pos, out.v2.pos, out.v3.pos, renderColor);
                             break;
                         case MODE_FLATCOLOR:
-                            drawTriangleHalfSpaceFlat(context, renderColor, out.v1, out.v2, out.v3);
+                            drawTriangleHalfSpaceFlat(context, out.v1, out.v2, out.v3, shader);
                             break;
                         case MODE_TEXTURED:
                             drawTriangleHalfSpace(context->surface,
@@ -203,10 +213,12 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
                                 renderColor);
                             break;
                         case MODE_FLATCOLOR:
-                            drawTriangleHalfSpaceFlat(context, renderColor,
+                            drawTriangleHalfSpaceFlat(
+                                context,
                                 result.triangles[i].v1,
                                 result.triangles[i].v2,
-                                result.triangles[i].v3
+                                result.triangles[i].v3,
+                                shader
                             );
                             break;
                         case MODE_TEXTURED:
