@@ -52,12 +52,11 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
     }
 
 //    printf("YAW=%f PITCH = %f\n",yaw,pitch);    
-
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));
     camera->forward.z = sin(toRad(yaw)) * cos(toRad(pitch));
-    
     camera->forward = normaliseVec3(camera->forward);
-    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward);    
+    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward);
+
 }
 #endif

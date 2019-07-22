@@ -9,9 +9,9 @@
 
 struct Face
 {
-    size_t vIndex[3];
-    size_t tIndex[3];
-    size_t nIndex[3];
+    int64_t vIndex[3];
+    int64_t tIndex[3];
+    int64_t nIndex[3];
 };
 
 struct Mesh

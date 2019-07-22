@@ -127,11 +127,14 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
     mat4x4 normalTransform = inverse(transpose(modelToWorldTransform));
     //DepthShader shader = {};
-    GouraudShader shader = {};
+    //GouraudShader shader = {};
     //FlatShader shader = {};
+    PhongShader shader = {};
     shader.in_VP = VP;
-    shader.in_ambient = {43.f, 124.f, 44.f};
-    shader.interpContext.interpFeatures = FEATURE_HAS_COLOR_BIT;
+    shader.in_Color = {100.f, 150.f, 250.f};
+    
+    //shader.interpContext.interpFeatures = FEATURE_HAS_COLOR_BIT;
+    shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
 //    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
@@ -171,7 +174,9 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         if(lightIntensity >= 0.f) {
             //shader.intensity = lightIntensity;
             shader.in_lightVector = cameraRay;
-                      
+            shader.in_viewVector = cameraRay;
+            shader.in_normalTransform = normalTransform;            
+
             out.v1 = shader.vertexShader(out.v1);//v1 * VP;
             out.v2 = shader.vertexShader(out.v2);//v2 * VP;
             out.v3 = shader.vertexShader(out.v3);//v3 * VP;

@@ -208,6 +208,12 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
         shader.interpContext.C2C0 = (v2.color - v0.color)/ triArea;
     }
 
+    if(shader.interpContext.interpFeatures & FEATURE_HAS_NORMAL_BIT) {
+        shader.interpContext.beginCoeffs.normal = v0.normal;
+        shader.interpContext.N1N0 = (v1.normal - v0.normal)/ triArea;
+        shader.interpContext.N2N0 = (v2.normal - v0.normal)/ triArea;
+    }
+
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});

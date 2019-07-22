@@ -186,6 +186,12 @@ inline Vec3 operator*(const Vec3& other, float scalar)
     return scalar * other;
 }
 
+//component-wise vector multiplication
+inline Vec3 operator^(const Vec3& left, const Vec3& right)
+{
+    return Vec3 {left.x * right.x, left.y * right.y, left.z * right.z};
+}
+
 inline Vec3 operator/(float scalar,const Vec3& other)
 {
     return Vec3{scalar / other.x, scalar / other.y, scalar / other.z};
@@ -302,6 +308,31 @@ inline Vec4& operator-=(Vec4& self, const Vec4& other)
     self = self - other;
     return self;
 }
+
+inline float clamp(float val, float min, float max)
+{
+    return val < min ? min : (val > max ? max : val); 
+}
+
+inline Vec2 clamp(const Vec2& val, const Vec2& min, const Vec2& max)
+{
+    return Vec2 {
+        clamp(val.x, min.x, max.x),
+        clamp(val.y, min.y, max.y)
+    };
+}
+
+inline Vec3 clamp(const Vec3& val, const Vec3& min, const Vec3& max)
+{
+    return Vec3 {
+        clamp(val.x, min.x, max.x),
+        clamp(val.y, min.y, max.y),
+        clamp(val.z, min.z, max.z)
+    };
+}
+
+static Vec3 RGB_BLACK = {0.f, 0.f, 0.f};
+static Vec3 RGB_WHITE = {255.f, 255.f, 255.f};
 
 inline mat4x4 loadIdentity()
 {

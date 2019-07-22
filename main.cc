@@ -27,7 +27,6 @@ int main(int argc, char **argv)
 
 
     RenderObject cube1 = {};
-    RenderObject cube2 = {};
     Texture cubeTexture = {};
     Mesh cubeMesh = {};
     if(!loadTexture("./resources/Bricks23_col.jpg", &cubeTexture))
@@ -42,13 +41,6 @@ int main(int argc, char **argv)
     cube1.flatColor = {255, 0, 0};
     cube1.mode = MODE_FLATCOLOR;
 
-    cube2.mesh = &cubeMesh;
-    cube2.texture = &cubeTexture;
-    cube2.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
-    cube2.transform.translate = Vec3{0.f, 0.f, 5.f};
-    cube2.flatColor = {255, 0, 0};
-    cube2.mode = MODE_FLATCOLOR;
-
     Timer tick = {};
     double deltaTime = 0.f;
     while(!windowClosed()) {
@@ -59,7 +51,6 @@ int main(int argc, char **argv)
 
         beginFrame(&context);
             renderObject(&context, cube1, camera);
-            renderObject(&context, cube2, camera);
         endFrame(&context);
         deltaTime = tick.stopMs();
         printf("Frame took %.2f[ms] \n",deltaTime);

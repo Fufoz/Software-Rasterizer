@@ -82,6 +82,7 @@ static Vertex intersectPlaneSegment(const Vertex& v1, const Vertex& v2, PlaneBit
     straddledVertex.pos = lerp(v1.pos, v2.pos, amount);
     straddledVertex.texCoords = lerp(v1.texCoords, v2.texCoords, amount);
     straddledVertex.color = lerp(v1.color, v2.color, amount);
+    straddledVertex.normal = lerp(v1.normal, v2.normal, amount);
 
     return straddledVertex;
 }
@@ -150,12 +151,14 @@ ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3)
     Vec4 refPoint = in.clippedVertices[0].pos;
     Vec3 refT = in.clippedVertices[0].texCoords;
     Vec3 refC = in.clippedVertices[0].color;
+    Vec3 refN = in.clippedVertices[0].normal;
 
     for(size_t i = 0; i < result.numTriangles; i++) {
         Triangle& tr = result.triangles[i];
         tr.v1.pos = refPoint;
         tr.v1.texCoords = refT;
         tr.v1.color = refC;
+        tr.v1.normal = refN;
 
         tr.v2.pos = in.clippedVertices[i + 1].pos; 
         tr.v3.pos = in.clippedVertices[i + 2].pos;
@@ -165,6 +168,9 @@ ClippResult clipTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3)
 
         tr.v2.color = in.clippedVertices[i + 1].color; 
         tr.v3.color = in.clippedVertices[i + 2].color;
+
+        tr.v2.normal = in.clippedVertices[i + 1].normal; 
+        tr.v3.normal = in.clippedVertices[i + 2].normal;
 
  //       printf("Triangle: v1 : {%f, %f, %f} v2:{%f, %f, %f} v3:{%f, %f, %f}\n",
  //       tr.v1.x,tr.v1.y,tr.v1.z,
