@@ -173,9 +173,9 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     SDL_Surface* surface = context->surface;
 
     //preserve depth of a polygon via keeping its z coordinate in clip-space
-    float z0Inv = 1.f / (float)v0.pos.z;
-    float z1Inv = 1.f / (float)v1.pos.z;
-    float z2Inv = 1.f / (float)v2.pos.z;
+    float z0Inv = 1.f / (float)v0.pos.w;
+    float z1Inv = 1.f / (float)v1.pos.w;
+    float z2Inv = 1.f / (float)v2.pos.w;
     
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
@@ -209,9 +209,23 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     }
 
     if(shader.interpContext.interpFeatures & FEATURE_HAS_NORMAL_BIT) {
+        v0.normal = v0.normal * z0Inv;//perspective correct attrib interp
+        v1.normal = v1.normal * z1Inv;
+        v2.normal = v2.normal * z2Inv;
         shader.interpContext.beginCoeffs.normal = v0.normal;
         shader.interpContext.N1N0 = (v1.normal - v0.normal)/ triArea;
         shader.interpContext.N2N0 = (v2.normal - v0.normal)/ triArea;
+    }
+
+    if(shader.interpContext.interpFeatures & FEATURE_HAS_TEXTURE_BIT) {
+        v0.texCoords = v0.texCoords * z0Inv;//perspective correct attrib interp
+        v1.texCoords = v1.texCoords * z1Inv;
+        v2.texCoords = v2.texCoords * z2Inv;
+        shader.interpContext.beginCoeffs.uv = v0.texCoords;
+        shader.interpContext.T1T0x = (v1.texCoords.x - v0.texCoords.x)/ triArea;
+        shader.interpContext.T2T0x = (v2.texCoords.x - v0.texCoords.x)/ triArea;
+        shader.interpContext.T1T0y = (v1.texCoords.y - v0.texCoords.y)/ triArea;
+        shader.interpContext.T2T0y = (v2.texCoords.y - v0.texCoords.y)/ triArea;
     }
 
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});

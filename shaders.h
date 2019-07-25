@@ -8,18 +8,18 @@ enum InterpFeatureBits
     FEATURE_HAS_TEXTURE_BIT = 1 << 1,
     FEATURE_HAS_NORMAL_BIT = 1 << 2
 };
+typedef uint32_t InterpFeaturesFlagBits;
 
 struct BeginCoeffs
 {
     Vec3 color;
     Vec3 normal;
-    Vec2 uv;
+    Vec3 uv;
 };
-
 
 struct InterpContext
 {
-    InterpFeatureBits interpFeatures;
+    InterpFeaturesFlagBits interpFeatures;
     BeginCoeffs beginCoeffs;
     float w1;//barycentric coords
     float w2;//barycentric coords
@@ -27,6 +27,8 @@ struct InterpContext
     float T1T0x;
     float T2T0y;
     float T1T0y;
+    float W1W0;
+    float W2W0;
     Vec3 C1C0;
     Vec3 C2C0;
     Vec3 N1N0;
@@ -139,6 +141,7 @@ struct PhongShader : Shader
     Vec3 fragmentShader(const Vec3& pixelCoords)
     {
         Vec3 normal = interpContext.beginCoeffs.normal + interpContext.w1 * interpContext.N1N0 + interpContext.w2 * interpContext.N2N0;
+        normal = normal * pixelCoords.z;
         normal = normaliseVec3(normal);
 
         Vec3 gl_fragColor = {};
@@ -151,4 +154,55 @@ struct PhongShader : Shader
         return gl_fragColor;
     }
 };
+
+//bump mapping(a.k.a normal mapping)
+struct BumpShader : Shader {
+    mat4x4 in_VP;
+    mat4x4 in_normalTransform;
+    Vec3 in_lightVector;
+    Vec3 in_viewVector;
+    Vec3 in_Color;
+    Texture *sampler2d;
+
+    Vec3 ambientReflectivity = {0.1f, 0.1f, 0.1f};
+    Vec3 diffuseReflectivity = {1.f, 1.f, 1.f};
+    Vec3 specularReflectivity = {1.f, 1.f, 1.f};
+    int glossinessPower = 32;
+
+    Vertex vertexShader(const Vertex& in)
+    {
+        Vertex gl_Position = {};
+        gl_Position.pos = in.pos * in_VP;
+        gl_Position.normal = normaliseVec3(in.normal * in_normalTransform);
+        return gl_Position;
+    }
+
+    Vec3 fragmentShader(const Vec3& pixelCoords)
+    {
+        float Tx = interpContext.beginCoeffs.uv.x +  interpContext.w1 * interpContext.T1T0x + interpContext.w2 * interpContext.T2T0x;
+        float Ty = interpContext.beginCoeffs.uv.y +  interpContext.w1 * interpContext.T1T0y + interpContext.w2 * interpContext.T2T0y;
+        Tx *= pixelCoords.z;
+        Ty *= pixelCoords.z;
+
+        int tx = Tx * (sampler2d->width - 1);
+        int ty = Ty * (sampler2d->height - 1);
+        int textureOffset = tx * 3 + ty * 3 * sampler2d->width;
+        uint8_t* position = sampler2d->data + textureOffset;
+        Vec3 color = {position[0], position[1], position[2]};
+
+        Vec3 normal = interpContext.beginCoeffs.normal + interpContext.w1 * interpContext.N1N0 + interpContext.w2 * interpContext.N2N0;
+        normal = normal / pixelCoords.z; 
+        normal = normaliseVec3(normal);
+//
+        Vec3 gl_fragColor = {};
+        Vec3 diffuseContribution = diffuseReflectivity * max(0.f, dotVec3(in_lightVector, normal));
+        Vec3 reflectedVector = 2.f * dotVec3(normal, in_lightVector) * normal - in_lightVector;
+        Vec3 specularContribution = specularReflectivity * pow(max(0.f, dotVec3(reflectedVector, in_viewVector)), glossinessPower);
+        Vec3 ambientContribution = ambientReflectivity;
+        gl_fragColor = (diffuseContribution + specularContribution + ambientContribution) ^ color;
+        gl_fragColor = clamp(gl_fragColor, RGB_BLACK, RGB_WHITE);
+        return gl_fragColor;
+    }
+};
+
 #endif

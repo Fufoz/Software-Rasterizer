@@ -130,11 +130,13 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     //GouraudShader shader = {};
     //FlatShader shader = {};
     PhongShader shader = {};
+//    BumpShader shader = {};
+    //shader.sampler2d = object.texture; 
     shader.in_VP = VP;
     shader.in_Color = {100.f, 150.f, 250.f};
     
-    //shader.interpContext.interpFeatures = FEATURE_HAS_COLOR_BIT;
     shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
+    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
 //    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
@@ -149,10 +151,6 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         out.v1.normal = normaliseVec3(input.v1.normal * normalTransform);
         out.v2.normal = normaliseVec3(input.v2.normal * normalTransform);
         out.v3.normal = normaliseVec3(input.v3.normal * normalTransform);
-
-        out.v1.texCoords = input.v1.texCoords;
-        out.v2.texCoords = input.v2.texCoords;
-        out.v3.texCoords = input.v3.texCoords;
 
         Vec4& v1 = out.v1.pos;
         Vec4& v2 = out.v2.pos;
@@ -180,6 +178,9 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             out.v1 = shader.vertexShader(out.v1);//v1 * VP;
             out.v2 = shader.vertexShader(out.v2);//v2 * VP;
             out.v3 = shader.vertexShader(out.v3);//v3 * VP;
+            out.v1.texCoords = input.v1.texCoords;
+            out.v2.texCoords = input.v2.texCoords;
+            out.v3.texCoords = input.v3.texCoords;
 
             //lightIntensity = std::abs(lightIntensity);
             Vec3 renderColor = lightIntensity * object.flatColor;
