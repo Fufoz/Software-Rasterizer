@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     Mesh cubeMesh = {};
     if(!loadTexture("./resources/Bricks23_col.jpg", &cubeTexture))
         return -1;
-    if(!loadMesh("./resources/monkey.obj", &cubeMesh))
+    if(!loadMesh("./resources/sphere.obj", &cubeMesh))
         return -1;
-    
+    averageNormals(&cubeMesh);    
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;
     cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};

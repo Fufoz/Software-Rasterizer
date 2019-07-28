@@ -7,11 +7,6 @@
 
 #define PI 3.14159265359f
 
-struct mat4x4
-{
-    float p[16];
-};
-
 union Vec2
 {
     struct {
@@ -88,6 +83,41 @@ union Vec4
 
     inline float& operator[] (int idx) { return data[idx];} 
     inline const float& operator[] (int idx) const { return data[idx];} 
+};
+
+union mat4x4
+{
+    struct {
+        float p[16];
+    };
+
+    struct {
+        Vec4 rows[4];
+    };
+    
+    struct {
+        Vec4 firstRow;
+        Vec4 secondRow;
+        Vec4 thirdRow;
+        Vec4 fourthRow;
+    };
+};
+
+union mat3x3
+{
+    struct {
+        float p[9];
+    };
+
+    struct {
+        Vec3 rows[3];
+    };
+    
+    struct {
+        Vec3 firstRow;
+        Vec3 secondRow;
+        Vec3 thirdRow;
+    };
 };
 
 union Quat
@@ -484,6 +514,18 @@ inline mat4x4 transpose(const mat4x4& in)
     return out;
 }
 
+inline mat3x3 transpose(const mat3x3& in)
+{
+    mat3x3 out = {};
+
+    for(uint8_t i = 0; i < 3; i++) {
+        for(uint8_t j = 0; j < 3; j++) {
+            out.p[j + i * 3] = in.p[j * 3 + i];
+        }
+    }
+    return out;
+}
+
 inline void transposeInplace(mat4x4& in)
 {
     mat4x4 tmp = in;
@@ -531,6 +573,15 @@ inline Vec3 operator*(const Vec3& left, const mat4x4& right)
     Vec4 out = {left.x, left.y, left.z, 0.f};
     out = out * right;
     return out.xyz;
+}
+
+inline Vec3 operator*(const Vec3& left, const mat3x3& right)
+{
+    Vec3 out = {};
+    out.x = left.x * right.p[0] + left.y * right.p[3] + left.z * right.p[6];
+    out.y = left.x * right.p[1] + left.y * right.p[4] + left.z * right.p[7];
+    out.z = left.x * right.p[2] + left.y * right.p[5] + left.z * right.p[8];
+    return out;
 }
 
 inline void logMat4x4(const char* tag, const mat4x4& in)

@@ -159,15 +159,17 @@ struct PhongShader : Shader
 struct BumpShader : Shader {
     mat4x4 in_VP;
     mat4x4 in_normalTransform;
+    mat3x3 in_TBN;
     Vec3 in_lightVector;
     Vec3 in_viewVector;
     Vec3 in_Color;
     Texture *sampler2d;
-
+    Texture *sampler2dN;
+    
     Vec3 ambientReflectivity = {0.1f, 0.1f, 0.1f};
     Vec3 diffuseReflectivity = {1.f, 1.f, 1.f};
     Vec3 specularReflectivity = {1.f, 1.f, 1.f};
-    int glossinessPower = 32;
+    int glossinessPower = 4;
 
     Vertex vertexShader(const Vertex& in)
     {
@@ -179,6 +181,7 @@ struct BumpShader : Shader {
 
     Vec3 fragmentShader(const Vec3& pixelCoords)
     {
+        //sample texture
         float Tx = interpContext.beginCoeffs.uv.x +  interpContext.w1 * interpContext.T1T0x + interpContext.w2 * interpContext.T2T0x;
         float Ty = interpContext.beginCoeffs.uv.y +  interpContext.w1 * interpContext.T1T0y + interpContext.w2 * interpContext.T2T0y;
         Tx *= pixelCoords.z;

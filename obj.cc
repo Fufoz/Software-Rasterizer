@@ -256,7 +256,7 @@ bool loadMesh(const char* model, Mesh* data)
 
 void averageNormals(Mesh* mesh)
 {
-    mesh->normals.resize(mesh->normals.size() + 2);
+    mesh->normals.resize(mesh->vertPos.size());
     memset(mesh->normals.data(), 0, mesh->normals.size() * sizeof(Vec3));
 
     for(uint32_t i = 0; i < mesh->faces.size(); i++) {

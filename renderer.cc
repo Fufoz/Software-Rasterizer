@@ -129,14 +129,14 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     //DepthShader shader = {};
     //GouraudShader shader = {};
     //FlatShader shader = {};
-    PhongShader shader = {};
-//    BumpShader shader = {};
-    //shader.sampler2d = object.texture; 
+    //PhongShader shader = {};
+    BumpShader shader = {};
+    shader.sampler2d = object.texture; 
     shader.in_VP = VP;
     shader.in_Color = {100.f, 150.f, 250.f};
     
-    shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
-    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
+    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
+    shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
 //    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
@@ -148,10 +148,6 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         out.v2.pos = input.v2.pos * modelToWorldTransform;
         out.v3.pos = input.v3.pos * modelToWorldTransform;
 
-        out.v1.normal = normaliseVec3(input.v1.normal * normalTransform);
-        out.v2.normal = normaliseVec3(input.v2.normal * normalTransform);
-        out.v3.normal = normaliseVec3(input.v3.normal * normalTransform);
-
         Vec4& v1 = out.v1.pos;
         Vec4& v2 = out.v2.pos;
         Vec4& v3 = out.v3.pos;
@@ -159,10 +155,7 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         Vec3 firstFaceEdge =  v2.xyz - v1.xyz;
         Vec3 secondFaceEdge = v3.xyz - v1.xyz;
         Vec3 faceNormal = normaliseVec3(cross(firstFaceEdge, secondFaceEdge));
-        //printf("Face normal before %f %f %f\n",faceNormal.x, faceNormal.y, faceNormal.z);
-        //faceNormal = normaliseVec3(0.33333f * (out.v1.normal + out.v2.normal + out.v3.normal)); 
-        //printf("Face normal after %f %f %f\n",faceNormal.x, faceNormal.y, faceNormal.z);
-        
+
         Vec3 centroid = (v1.xyz + v2.xyz + v3.xyz) * 0.333f;
         //the triangle is more lid the more it's normal is aligned with the light direction
         Vec3 cameraRay = normaliseVec3(camera.camPos - centroid);
@@ -170,6 +163,28 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 
         //face culling
         if(lightIntensity >= 0.f) {
+
+            out.v1.normal = normaliseVec3(input.v1.normal * normalTransform);
+            out.v2.normal = normaliseVec3(input.v2.normal * normalTransform);
+            out.v3.normal = normaliseVec3(input.v3.normal * normalTransform);
+
+            //bump mapping
+            float deltaU1 = out.v2.texCoords.u - out.v1.texCoords.u;
+            float deltaU2 = out.v3.texCoords.u - out.v1.texCoords.u;
+            float deltaV1 = out.v2.texCoords.v - out.v1.texCoords.v;
+            float deltaV2 = out.v3.texCoords.v - out.v1.texCoords.v;
+            float invDet = 1.f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+            Vec3 T = normaliseVec3(invDet * (deltaV2 - deltaU2) * firstFaceEdge); 
+            Vec3 B = normaliseVec3(invDet * (deltaU1 - deltaV1) * secondFaceEdge); 
+            
+            mat3x3 TBN = {};
+            TBN.firstRow = T;
+            TBN.secondRow = B;
+            TBN.thirdRow = faceNormal;
+            TBN = transpose(TBN);
+            shader.in_TBN = TBN;
+            ////////////////////////////////////////
+
             //shader.intensity = lightIntensity;
             shader.in_lightVector = cameraRay;
             shader.in_viewVector = cameraRay;
