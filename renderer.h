@@ -41,6 +41,7 @@ struct RenderObject
 {
     Mesh* mesh;
     Texture* texture;
+    Texture* normalMap;
     Transform transform;
     RenderMode mode;
     Vec3 flatColor = {1.f, 1.f, 1.f};
@@ -52,6 +53,7 @@ struct Vertex
     Vec3 texCoords;
     Vec3 normal;
     Vec3 color;
+    Vec3 tangent;
 };
 
 struct Triangle

@@ -116,6 +116,11 @@ if(face.nIndex[0]) {
     out.v2.normal =  mesh.normals[face.nIndex[1] - 1];
     out.v3.normal  = mesh.normals[face.nIndex[2] - 1];
 }
+//if(face.tanIndex[0]) {
+    out.v1.tangent  = mesh.tangents[face.tanIndex[0] - 1];
+    out.v2.tangent =  mesh.tangents[face.tanIndex[1] - 1];
+    out.v3.tangent  = mesh.tangents[face.tanIndex[2] - 1];
+//}
     return out;
 }
 
@@ -131,18 +136,19 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     //FlatShader shader = {};
     //PhongShader shader = {};
     BumpShader shader = {};
-    shader.sampler2d = object.texture; 
+    shader.sampler2d = object.texture;
+    shader.sampler2dN = object.normalMap; 
     shader.in_VP = VP;
-    shader.in_Color = {100.f, 150.f, 250.f};
+    //shader.in_Color = {100.f, 150.f, 250.f};
     
     //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
-    shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
+    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
 //    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
 
         Triangle input = getTriangle(*object.mesh, object.mesh->faces[i]);
-        Triangle out = {};
+        Triangle out = input;
 
         out.v1.pos = input.v1.pos * modelToWorldTransform;
         out.v2.pos = input.v2.pos * modelToWorldTransform;
@@ -163,39 +169,21 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 
         //face culling
         if(lightIntensity >= 0.f) {
-
-            out.v1.normal = normaliseVec3(input.v1.normal * normalTransform);
-            out.v2.normal = normaliseVec3(input.v2.normal * normalTransform);
-            out.v3.normal = normaliseVec3(input.v3.normal * normalTransform);
-
-            //bump mapping
-            float deltaU1 = out.v2.texCoords.u - out.v1.texCoords.u;
-            float deltaU2 = out.v3.texCoords.u - out.v1.texCoords.u;
-            float deltaV1 = out.v2.texCoords.v - out.v1.texCoords.v;
-            float deltaV2 = out.v3.texCoords.v - out.v1.texCoords.v;
-            float invDet = 1.f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
-            Vec3 T = normaliseVec3(invDet * (deltaV2 - deltaU2) * firstFaceEdge); 
-            Vec3 B = normaliseVec3(invDet * (deltaU1 - deltaV1) * secondFaceEdge); 
-            
-            mat3x3 TBN = {};
-            TBN.firstRow = T;
-            TBN.secondRow = B;
-            TBN.thirdRow = faceNormal;
-            TBN = transpose(TBN);
-            shader.in_TBN = TBN;
             ////////////////////////////////////////
 
             //shader.intensity = lightIntensity;
-            shader.in_lightVector = cameraRay;
-            shader.in_viewVector = cameraRay;
-            shader.in_normalTransform = normalTransform;            
+            //shader.in_lightVector = cameraRay;
+            //shader.in_viewVector = cameraRay;
+            shader.in_normalTransform = normalTransform;
+            shader.in_cameraPosition = camera.camPos;
 
-            out.v1 = shader.vertexShader(out.v1);//v1 * VP;
-            out.v2 = shader.vertexShader(out.v2);//v2 * VP;
-            out.v3 = shader.vertexShader(out.v3);//v3 * VP;
             out.v1.texCoords = input.v1.texCoords;
             out.v2.texCoords = input.v2.texCoords;
             out.v3.texCoords = input.v3.texCoords;
+            out.v1 = shader.vertexShader(out.v1, 0);
+            out.v2 = shader.vertexShader(out.v2, 1);
+            out.v3 = shader.vertexShader(out.v3, 2);
+
 
             //lightIntensity = std::abs(lightIntensity);
             Vec3 renderColor = lightIntensity * object.flatColor;

@@ -250,6 +250,7 @@ bool loadMesh(const char* model, Mesh* data)
     printf("MESH INFO:\n Faces = %lu\n VertexPositions = %lu\n Normals = %lu\n Texture Coords = %lu\n",
         data->faces.size(), data->vertPos.size(), data->normals.size(), data->texCoord.size());
     printf("----------------------------------------\n");
+
     fclose(mesh);
     return true;
 }
@@ -281,8 +282,59 @@ void averageNormals(Mesh* mesh)
         normaliseVec3InPlace(mesh->normals[i]);
     }
 
-    printf("Averaged normals:");
+    printf("Averaged normals:\n");
     for(auto normal : mesh->normals)
         printf("Normal %f %f %f\n", normal.x, normal.y, normal.z);
 
+}
+
+void fillTangent(Mesh* mesh)
+{
+    mesh->tangents.resize(mesh->vertPos.size());
+    memset(mesh->tangents.data(), 0, mesh->tangents.size() * sizeof(Vec3));
+
+    for(uint32_t i = 0; i < mesh->faces.size(); i++) {
+        //grab triangle vertices of current face
+        Vec3& v0 = mesh->vertPos[mesh->faces[i].vIndex[0] - 1];
+        Vec3& v1 = mesh->vertPos[mesh->faces[i].vIndex[1] - 1];
+        Vec3& v2 = mesh->vertPos[mesh->faces[i].vIndex[2] - 1];
+
+        Vec3& t0 = mesh->texCoord[mesh->faces[i].tIndex[0] - 1];
+        Vec3& t1 = mesh->texCoord[mesh->faces[i].tIndex[1] - 1];
+        Vec3& t2 = mesh->texCoord[mesh->faces[i].tIndex[2] - 1];
+
+        Vec3 firstEdge = v1 - v0;
+        Vec3 secondEdge = v2 - v0;
+
+        //compute tangent space basis vectors
+        float deltaU1 = t1.u - t0.u;
+        float deltaU2 = t2.u - t0.u;
+        float deltaV1 = t1.v - t0.v;
+        float deltaV2 = t2.v - t0.v;
+        float invDet = 1.f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+        Vec3 T = normaliseVec3(deltaV2 * firstEdge - deltaV1 * secondEdge) * invDet;
+        //normaliseVec3((deltaV2 - deltaU2) * firstEdge); 
+        //Vec3 B = normaliseVec3((deltaU1 - deltaV1) * secondEdge);
+        Vec3 B = normaliseVec3(-deltaU2 * firstEdge + deltaU1 * secondEdge) * invDet;
+        for(int j = 0; j < 3; j++) {
+            mesh->tangents[mesh->faces[i].vIndex[j] - 1] += T;
+            mesh->faces[i].tanIndex[j] = mesh->faces[i].vIndex[j];
+        }
+    }
+
+    for(uint32_t i = 0; i < mesh->faces.size(); i++) {
+       
+        /*
+            Orthogonalize tangent vector for each vertex
+            by using Gram-Schmit orthogonalisation
+        */
+        for(int j = 0; j < 3; j++) {
+            const Vec3& normal = mesh->normals[mesh->faces[i].nIndex[j] - 1];
+            Vec3& tangent = mesh->tangents[mesh->faces[i].tanIndex[j] - 1];
+            tangent = normaliseVec3(tangent - dotVec3(tangent, normal) * normal);
+        }
+    }
+    for(uint32_t i = 0 ; i < mesh->tangents.size(); i++) {
+        printf("Tangent vector %f %f %f\n",mesh->tangents[i].x,mesh->tangents[i].y,mesh->tangents[i].z);
+    }
 }

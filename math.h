@@ -568,12 +568,25 @@ inline Vec4& operator*=(Vec4& left, const mat4x4& right)
     return left;
 }
 
+inline Vec4& operator*=(Vec4& left, float val)
+{
+    left = left * val;
+    return left;
+}
+
+inline Vec3& operator*=(Vec3& left, float val)
+{
+    left = left * val;
+    return left;
+}
+
 inline Vec3 operator*(const Vec3& left, const mat4x4& right)
 {
     Vec4 out = {left.x, left.y, left.z, 0.f};
     out = out * right;
     return out.xyz;
 }
+
 
 inline Vec3 operator*(const Vec3& left, const mat3x3& right)
 {

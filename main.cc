@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
     RenderContext context = {};
-    if(!createSoftwareRenderer(&context,"software renderer", 640, 480))
+    if(!createSoftwareRenderer(&context,"software renderer", 1920, 1080))
         return -1;
 
     Camera camera;
@@ -33,9 +33,15 @@ int main(int argc, char **argv)
         return -1;
     if(!loadMesh("./resources/sphere.obj", &cubeMesh))
         return -1;
-    averageNormals(&cubeMesh);    
+    Texture normalMap = {};
+    if(!loadTexture("./resources/Bricks23_nrm.jpg", &normalMap))
+        return -1;
+
+    averageNormals(&cubeMesh);
+    fillTangent(&cubeMesh);    
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;
+    cube1.normalMap = &normalMap;
     cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
     cube1.transform.translate = Vec3{0.f, 0.f, 0.f};
     cube1.flatColor = {255, 0, 0};
