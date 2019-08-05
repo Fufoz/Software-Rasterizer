@@ -42,6 +42,7 @@ struct RenderObject
     Mesh* mesh;
     Texture* texture;
     Texture* normalMap;
+    Texture* heightMap;
     Transform transform;
     RenderMode mode;
     Vec3 flatColor = {1.f, 1.f, 1.f};

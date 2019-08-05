@@ -21,6 +21,7 @@ bool loadTexture(const char* path, Texture* out, bool flipImage)
     out->height = theight;
     out->numc = numChannels;
     out->data = data;
+    out->size = twidth * theight * numChannels;
     return true; 
 }
 

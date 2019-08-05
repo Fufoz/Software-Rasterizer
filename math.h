@@ -30,6 +30,11 @@ union Vec2
 union Vec3
 {
     struct {
+        Vec2 xy;
+        float z;
+    };
+
+    struct {
         float x;
         float y;
         float z;
@@ -162,6 +167,31 @@ inline Vec2& operator-=(Vec2& self, const Vec2& other)
 {
     self = self - other;
     return self;
+}
+
+inline Vec2 operator*(const Vec2& left, float value)
+{
+    return Vec2{left.x * value, left.y * value};
+}
+
+inline Vec2 operator*(float value, const Vec2& left)
+{
+    return left * value;
+}
+
+inline Vec2 operator^(const Vec2& left, const Vec2& right)
+{
+    return Vec2 {left.x * right.x, left.y * right.y}; 
+}
+
+inline Vec2 operator/(const Vec2& left, float value)
+{
+    return Vec2{left.x / value, left.y / value};
+}
+
+inline Vec2 operator/(float value, const Vec2& left)
+{
+    return Vec2{value / left.x, value/left.y};
 }
 
 inline float dotVec2(const Vec2& left, const Vec2& right)

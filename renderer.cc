@@ -137,7 +137,8 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     //PhongShader shader = {};
     BumpShader shader = {};
     shader.sampler2d = object.texture;
-    shader.sampler2dN = object.normalMap; 
+    shader.sampler2dN = object.normalMap;
+    shader.sampler2dD = object.heightMap; 
     shader.in_VP = VP;
     //shader.in_Color = {100.f, 150.f, 250.f};
     

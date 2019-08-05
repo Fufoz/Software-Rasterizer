@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
     RenderContext context = {};
-    if(!createSoftwareRenderer(&context,"software renderer", 1920, 1080))
+    if(!createSoftwareRenderer(&context,"software renderer", 640, 480))
         return -1;
 
     Camera camera;
@@ -29,12 +29,16 @@ int main(int argc, char **argv)
     RenderObject cube1 = {};
     Texture cubeTexture = {};
     Mesh cubeMesh = {};
-    if(!loadTexture("./resources/Bricks23_col.jpg", &cubeTexture))
+    if(!loadMesh("./resources/plane.obj", &cubeMesh))
         return -1;
-    if(!loadMesh("./resources/sphere.obj", &cubeMesh))
+    if(!loadTexture("./resources/rough_block_wall_diff_2k.jpg", &cubeTexture))
         return -1;
     Texture normalMap = {};
-    if(!loadTexture("./resources/Bricks23_nrm.jpg", &normalMap))
+    if(!loadTexture("./resources/rough_block_wall_nor_2k.jpg", &normalMap))
+        return -1;
+
+    Texture heightMap = {};
+    if(!loadTexture("./resources/rough_block_wall_disp_2k.jpg", &heightMap))
         return -1;
 
     averageNormals(&cubeMesh);
@@ -42,6 +46,7 @@ int main(int argc, char **argv)
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;
     cube1.normalMap = &normalMap;
+    cube1.heightMap = &heightMap;
     cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
     cube1.transform.translate = Vec3{0.f, 0.f, 0.f};
     cube1.flatColor = {255, 0, 0};

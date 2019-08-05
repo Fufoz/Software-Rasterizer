@@ -200,9 +200,9 @@ struct BumpShader : Shader {
     Vec3 viewVector[3];
     Vec3 uvs[3];
 
-    Texture *sampler2d;
-    Texture *sampler2dN;
-
+    Texture* sampler2d;
+    Texture* sampler2dN;
+    Texture* sampler2dD;
     Vec3 ambientReflectivity = {0.1f, 0.1f, 0.1f};
     Vec3 diffuseReflectivity = {1.f, 1.f, 1.f};
     Vec3 specularReflectivity = {1.f, 1.f, 1.f};
@@ -266,7 +266,7 @@ struct BumpShader : Shader {
         T1T0 = (uvs[1] - uvs[0]) / triArea;
         T2T0 = (uvs[2] - uvs[0]) / triArea;
     }
-
+    
     Vec3 fragmentShader(const Vec3& pixelCoords)
     {
         //sample texture
@@ -278,9 +278,21 @@ struct BumpShader : Shader {
 
         int tx = interpUVs.u * (sampler2d->width - 1);
         int ty = interpUVs.v * (sampler2d->height - 1);
+         
+        uint8_t* heightValuePos = sampler2dD->data + ty * sampler2dD->width + tx;
+        float heightValue = (*heightValuePos / 255.f) * 0.05f;// * 0.04f - 0.02f;
+        Vec2 parallaxOffset = interpView.xy * heightValue;// / interpView.z;// ^ Vec2{1.f, -1.f};
+        
+        tx = (interpUVs.u + parallaxOffset.u) * (sampler2d->width - 1);
+        ty = (interpUVs.v + parallaxOffset.v) * (sampler2d->height - 1);
 
-        int textureOffset = tx * 3 + ty * 3 * sampler2d->width;
+        //discard fragments at texture border
+        if(tx > (sampler2d->width - 1) || tx < 0 || ty > (sampler2d->height - 1) || ty < 0)
+            return Vec3{};
 
+        int textureOffset = tx * sampler2d->numc + ty * sampler2d->numc * sampler2d->width;
+        
+        
         uint8_t* position = sampler2d->data + textureOffset;
         Vec3 color = {position[0], position[1], position[2]};
                 
