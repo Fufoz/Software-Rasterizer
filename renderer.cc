@@ -126,11 +126,11 @@ if(face.nIndex[0]) {
 
 void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera)
 {
-    static float x = 0.f;//rotateY(x) *
     mat4x4 modelToWorldTransform =  loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
-    x+=0.5f;
     mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
     mat4x4 normalTransform = inverse(transpose(modelToWorldTransform));
+    //logMat4x4("MODEL MAT",modelToWorldTransform);
+    //logMat4x4("NORMAL MAT",normalTransform);
     //DepthShader shader = {};
     //GouraudShader shader = {};
     //FlatShader shader = {};

@@ -163,6 +163,16 @@ inline Vec2& operator+=(Vec2& self, const Vec2& other)
     return self;
 }
 
+inline Vec2 operator+(const Vec3& left, const Vec2& right)
+{
+    return Vec2{left.x + right.x, left.y + right.y};
+}
+
+inline Vec2 operator+(const Vec2& left, const Vec3& right)
+{
+    return Vec2{left.x + right.x, left.y + right.y};
+}
+
 inline Vec2& operator-=(Vec2& self, const Vec2& other)
 {
     self = self - other;

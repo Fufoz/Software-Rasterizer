@@ -10,7 +10,7 @@ bool loadTexture(const char* path, Texture* out, bool flipImage)
     int numChannels;
 
     stbi_set_flip_vertically_on_load(flipImage);
-    uint8_t* data = stbi_load(path, &twidth, &theight, &numChannels, STBI_rgb);
+    uint8_t* data = stbi_load(path, &twidth, &theight, &numChannels, 0);
     
     if(!data) {
         printf("Failed to load texture from path %s!\n", path);

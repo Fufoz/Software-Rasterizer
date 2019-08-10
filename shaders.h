@@ -39,7 +39,7 @@ struct InterpContext
 struct Shader {
     InterpContext interpContext;
     virtual Vertex vertexShader(const Vertex& in, int vn) = 0;
-    virtual Vec3 fragmentShader(const Vec3& pixelCoords) = 0;
+    virtual Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard) = 0;
 
     virtual void prepareInterpolants(
         const Vertex& v1, const Vertex& v2, const Vertex& v3, 
@@ -58,7 +58,7 @@ struct DepthShader : Shader
         return gl_Position;
     }
 
-    Vec3 fragmentShader(const Vec3& pixelCoords)
+    Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         //normalise z values between 0 and 1
         float z = (pixelCoords.z - 0.1f) / (10.f - 0.1f);
@@ -88,7 +88,7 @@ struct FlatShader : Shader
         return gl_Position;
     }
 
-    Vec3 fragmentShader(const Vec3& pixelCoords)
+    Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         Vec3 gl_fragColor = in_ambient * intensity;        
         return gl_fragColor;
@@ -131,7 +131,7 @@ struct GouraudShader : Shader
         return gl_Position;
     }
 
-    Vec3 fragmentShader(const Vec3& pixelCoords)
+    Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {        
         Vec3 gl_fragColor = interpContext.beginCoeffs.color + interpContext.w1 * interpContext.C1C0 + interpContext.w2 * interpContext.C2C0;
         return gl_fragColor;
@@ -167,7 +167,7 @@ struct PhongShader : Shader
         return gl_Position;
     }
 
-    Vec3 fragmentShader(const Vec3& pixelCoords)
+    Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         Vec3 normal = interpContext.beginCoeffs.normal + interpContext.w1 * interpContext.N1N0 + interpContext.w2 * interpContext.N2N0;
         normal = normal * pixelCoords.z;
@@ -266,8 +266,18 @@ struct BumpShader : Shader {
         T1T0 = (uvs[1] - uvs[0]) / triArea;
         T2T0 = (uvs[2] - uvs[0]) / triArea;
     }
-    
-    Vec3 fragmentShader(const Vec3& pixelCoords)
+
+    float texture2D(Texture* sampler, const Vec3& uvs)
+    {
+        if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
+            return 0.f;
+        int xOffset = uvs.u * (sampler->width - 1) * sampler->numc; 
+        int yOffset = uvs.v * (sampler->height - 1) * sampler->numc;// * sampler->width;
+        uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
+        return (float)(*pos)/255.f;
+    }
+
+    Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         //sample texture
         Vec3 interpUVs = (uvs[0] + pixelCoords.u * T1T0 + pixelCoords.v * T2T0) * pixelCoords.z; 
@@ -276,26 +286,47 @@ struct BumpShader : Shader {
         interpLight = normaliseVec3(interpLight);
         interpView = normaliseVec3(interpView);
 
+        int numLayers = 30;
+        float layerStep = 1.f / (float)numLayers;
+        float currentDiscreteHeight = 0.f;
+        Vec2 uvStep = interpView.xy* 0.1f/(float)(interpView.z * numLayers);
+        float currentSampledDepth = texture2D(sampler2dD, interpUVs);
+
+        for(uint32_t i = 0; i < numLayers; i++) {
+            interpUVs.u += uvStep.u;
+            interpUVs.v += uvStep.v;
+            currentDiscreteHeight += layerStep;
+            currentSampledDepth = texture2D(sampler2dD, interpUVs);
+            
+            if(currentDiscreteHeight > currentSampledDepth)
+                break;
+        }
+
+       // Vec3 prevUVs = {};
+       // prevUVs.u = interpUVs.u + uvStep.u;
+       // prevUVs.v = interpUVs.v + uvStep.v;
+//
+       // float nextDepth = currentSampledDepth - currentDiscreteHeight;
+       // float previousSampledDepth = texture2D(sampler2dD, prevUVs) - currentDiscreteHeight + layerStep;
+       // float weight = previousSampledDepth / (previousSampledDepth - currentSampledDepth);
+       // float actualDepth = lerp(currentSampledDepth, previousSampledDepth, weight);
+       // interpUVs.u = prevUVs.u +  
+
+       // float afterHeight = currentHeight + layerStep;
+       // float beforeHeight = 
+        //discard fragments at texture border
+        if(interpUVs.u > 1 || interpUVs.u < 0 || interpUVs.v > 1 || interpUVs.v < 0) {
+            discard = true;
+            return Vec3{};
+        }
+
         int tx = interpUVs.u * (sampler2d->width - 1);
         int ty = interpUVs.v * (sampler2d->height - 1);
-         
-        uint8_t* heightValuePos = sampler2dD->data + ty * sampler2dD->width + tx;
-        float heightValue = (*heightValuePos / 255.f) * 0.05f;// * 0.04f - 0.02f;
-        Vec2 parallaxOffset = interpView.xy * heightValue;// / interpView.z;// ^ Vec2{1.f, -1.f};
-        
-        tx = (interpUVs.u + parallaxOffset.u) * (sampler2d->width - 1);
-        ty = (interpUVs.v + parallaxOffset.v) * (sampler2d->height - 1);
-
-        //discard fragments at texture border
-        if(tx > (sampler2d->width - 1) || tx < 0 || ty > (sampler2d->height - 1) || ty < 0)
-            return Vec3{};
-
         int textureOffset = tx * sampler2d->numc + ty * sampler2d->numc * sampler2d->width;
-        
-        
+                
         uint8_t* position = sampler2d->data + textureOffset;
         Vec3 color = {position[0], position[1], position[2]};
-                
+        return color;
         uint8_t* normalPosition = sampler2dN->data + textureOffset;
 
         //decode normal coords from normal map        

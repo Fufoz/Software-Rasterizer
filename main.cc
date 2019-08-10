@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     RenderObject cube1 = {};
     Texture cubeTexture = {};
     Mesh cubeMesh = {};
-    if(!loadMesh("./resources/plane.obj", &cubeMesh))
+    if(!loadMesh("./resources/planeZ.obj", &cubeMesh))
         return -1;
     if(!loadTexture("./resources/rough_block_wall_diff_2k.jpg", &cubeTexture))
         return -1;
@@ -42,13 +42,13 @@ int main(int argc, char **argv)
         return -1;
 
     averageNormals(&cubeMesh);
-    fillTangent(&cubeMesh);    
+    fillTangent(&cubeMesh);
     cube1.mesh = &cubeMesh;
     cube1.texture = &cubeTexture;
     cube1.normalMap = &normalMap;
     cube1.heightMap = &heightMap;
-    cube1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
-    cube1.transform.translate = Vec3{0.f, 0.f, 0.f};
+    cube1.transform.scale = Vec3{0.10f, 0.10f, 0.10f};
+    cube1.transform.translate = Vec3{0.f, 0.f, -3.f};
     cube1.flatColor = {255, 0, 0};
     cube1.mode = MODE_FLATCOLOR;
 

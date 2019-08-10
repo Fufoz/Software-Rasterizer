@@ -268,7 +268,7 @@ void averageNormals(Mesh* mesh)
         
         //compute current face normal
         Vec3 firstEdge = v1 - v0;
-        Vec3 secondEdge = v2 - v1;
+        Vec3 secondEdge = v2 - v0;
         Vec3 normal = cross(firstEdge, secondEdge);
         normaliseVec3InPlace(normal);
 

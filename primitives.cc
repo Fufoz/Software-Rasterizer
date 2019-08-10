@@ -232,7 +232,8 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-
+    bool discardFragment = false;
+    
     for(int y = topY; y > botY; y--) {
 
         float w0 = w0StartRow;
@@ -252,8 +253,10 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
                     Vec3 gl_pixelCoord = {w1, w2, Z};
                     shader.interpContext.w1 = w1;
                     shader.interpContext.w2 = w2;
-                    Vec3 finalColor = shader.fragmentShader(gl_pixelCoord);
-                    drawPixel(surface, x, y, finalColor);
+                    discardFragment = false;
+                    Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
+                    if(!discardFragment)
+                        drawPixel(surface, x, y, finalColor);
                 }
             }
 
