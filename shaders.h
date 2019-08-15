@@ -286,15 +286,15 @@ struct BumpShader : Shader {
         interpLight = normaliseVec3(interpLight);
         interpView = normaliseVec3(interpView);
 
-        int numLayers = 30;
+        int numLayers = 10;
         float layerStep = 1.f / (float)numLayers;
         float currentDiscreteHeight = 0.f;
-        Vec2 uvStep = interpView.xy* 0.1f/(float)(interpView.z * numLayers);
+        Vec2 uvStep = interpView.xy* 0.2f/(float)numLayers;///(float)(interpView.z * numLayers);
         float currentSampledDepth = texture2D(sampler2dD, interpUVs);
 
         for(uint32_t i = 0; i < numLayers; i++) {
             interpUVs.u += uvStep.u;
-            interpUVs.v += uvStep.v;
+            interpUVs.v -= uvStep.v;
             currentDiscreteHeight += layerStep;
             currentSampledDepth = texture2D(sampler2dD, interpUVs);
             
@@ -303,17 +303,14 @@ struct BumpShader : Shader {
         }
 
        // Vec3 prevUVs = {};
-       // prevUVs.u = interpUVs.u + uvStep.u;
+       // prevUVs.u = interpUVs.u - uvStep.u;
        // prevUVs.v = interpUVs.v + uvStep.v;
 //
        // float nextDepth = currentSampledDepth - currentDiscreteHeight;
        // float previousSampledDepth = texture2D(sampler2dD, prevUVs) - currentDiscreteHeight + layerStep;
        // float weight = previousSampledDepth / (previousSampledDepth - currentSampledDepth);
        // float actualDepth = lerp(currentSampledDepth, previousSampledDepth, weight);
-       // interpUVs.u = prevUVs.u +  
-
-       // float afterHeight = currentHeight + layerStep;
-       // float beforeHeight = 
+	    
         //discard fragments at texture border
         if(interpUVs.u > 1 || interpUVs.u < 0 || interpUVs.v > 1 || interpUVs.v < 0) {
             discard = true;
@@ -326,7 +323,7 @@ struct BumpShader : Shader {
                 
         uint8_t* position = sampler2d->data + textureOffset;
         Vec3 color = {position[0], position[1], position[2]};
-        return color;
+        //return color;
         uint8_t* normalPosition = sampler2dN->data + textureOffset;
 
         //decode normal coords from normal map        

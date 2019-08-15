@@ -1,4 +1,5 @@
 #include "obj.h"
+#include <cstring>
 
 static inline bool isVertexCoordinates(const char* buffer)
 {

@@ -31,7 +31,7 @@ union Vec3
 {
     struct {
         Vec2 xy;
-        float z;
+        float _z;
     };
 
     struct {

@@ -24,13 +24,6 @@ add_executable(soft
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})
 target_link_libraries(soft ${SDL_LIBRARIES})
 
-if(UNIX)
-    target_compile_options(soft BEFORE PRIVATE -Wall -Werror)
-elseif(MSVC)
-    #target_compile_options(soft BEFORE PRIVATE /WX)
-endif()
-
-
 install(TARGETS soft RUNTIME DESTINATION ./bin)
 
 if(WIN32)

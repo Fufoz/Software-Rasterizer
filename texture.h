@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 #include <cstdint>
-
+#include <stddef.h>
 struct Texture
 {
     uint32_t width;
