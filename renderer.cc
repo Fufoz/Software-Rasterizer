@@ -106,21 +106,25 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     out.v1.pos  = homogenize(mesh.vertPos[face.vIndex[0] - 1]);
     out.v2.pos =  homogenize(mesh.vertPos[face.vIndex[1] - 1]);
     out.v3.pos  = homogenize(mesh.vertPos[face.vIndex[2] - 1]);
-if(face.tIndex[0]) {
-    out.v1.texCoords  = mesh.texCoord[face.tIndex[0] - 1];
-    out.v2.texCoords =  mesh.texCoord[face.tIndex[1] - 1];
-    out.v3.texCoords  = mesh.texCoord[face.tIndex[2] - 1];
-}
-if(face.nIndex[0]) {
-    out.v1.normal  = mesh.normals[face.nIndex[0] - 1];
-    out.v2.normal =  mesh.normals[face.nIndex[1] - 1];
-    out.v3.normal  = mesh.normals[face.nIndex[2] - 1];
-}
-//if(face.tanIndex[0]) {
-    out.v1.tangent  = mesh.tangents[face.tanIndex[0] - 1];
-    out.v2.tangent =  mesh.tangents[face.tanIndex[1] - 1];
-    out.v3.tangent  = mesh.tangents[face.tanIndex[2] - 1];
-//}
+	
+	if(mesh.meshFeatureMask & FEATURE_UVS) {
+	    out.v1.texCoords  = mesh.texCoord[face.tIndex[0] - 1];
+	    out.v2.texCoords =  mesh.texCoord[face.tIndex[1] - 1];
+	    out.v3.texCoords  = mesh.texCoord[face.tIndex[2] - 1];
+	}
+
+	if(mesh.meshFeatureMask & FEATURE_NORMALS) {
+	    out.v1.normal  = mesh.normals[face.nIndex[0] - 1];
+	    out.v2.normal =  mesh.normals[face.nIndex[1] - 1];
+	    out.v3.normal  = mesh.normals[face.nIndex[2] - 1];
+	}
+
+	if(mesh.meshFeatureMask & FEATURE_TANGENTS) {
+	    out.v1.tangent  = mesh.tangents[face.tanIndex[0] - 1];
+	    out.v2.tangent =  mesh.tangents[face.tanIndex[1] - 1];
+	    out.v3.tangent  = mesh.tangents[face.tanIndex[2] - 1];
+	}
+	
     return out;
 }
 
@@ -193,61 +197,18 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             if( isInsideViewFrustum(out.v1.pos) &&
                 isInsideViewFrustum(out.v2.pos) &&
                 isInsideViewFrustum(out.v3.pos)) {
-                    switch(object.mode) {
-                        case MODE_WIREFRAME:
-                            drawWireFrame(context->surface, out.v1.pos, out.v2.pos, out.v3.pos, renderColor);
-                            break;
-                        case MODE_FLATCOLOR:
-                            drawTriangleHalfSpaceFlat(context, out.v1, out.v2, out.v3, shader);
-                            break;
-                        case MODE_TEXTURED:
-                            drawTriangleHalfSpace(context->surface,
-                                context->zBuffer,
-                                *object.texture, out.v1, out.v2, out.v3,
-                                renderColor);
-                            break;
-                        default:
-                            break;
-                    }
-
+                drawTriangleHalfSpaceFlat(context, out.v1, out.v2, out.v3, shader);
             } else {//else clip polygon
-
                 ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
-
                 for(size_t i = 0; i < result.numTriangles; i++) {
-                    switch(object.mode) {
-                        case MODE_WIREFRAME:
-                            drawWireFrame(context->surface, result.triangles[i].v1.pos,
-                                result.triangles[i].v2.pos,
-                                result.triangles[i].v3.pos,
-                                renderColor);
-                            break;
-                        case MODE_FLATCOLOR:
-                            drawTriangleHalfSpaceFlat(
-                                context,
-                                result.triangles[i].v1,
-                                result.triangles[i].v2,
-                                result.triangles[i].v3,
-                                shader
-                            );
-                            break;
-                        case MODE_TEXTURED:
-                            drawTriangleHalfSpace(context->surface,
-                                context->zBuffer,
-                                *object.texture,
-                                result.triangles[i].v1,
-                                result.triangles[i].v2,
-                                result.triangles[i].v3,                                
-                                renderColor);
-                            break;
-                        default:
-                            break;
-                    }
-                }//for clip tris
-            }//else
-        }//diffuse check
+					Triangle& triangle = result.triangles[i];
+                    drawTriangleHalfSpaceFlat(context, triangle.v1, triangle.v2, triangle.v3, shader);
+                }
+            }
+        }//backface cull
     }//main face loop
 }
+
 
 void endFrame(RenderContext* context)
 {

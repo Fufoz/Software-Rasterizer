@@ -2,14 +2,6 @@
 #define SHADER_H
 #include "renderer.h"
 
-enum InterpFeatureBits
-{
-    FEATURE_HAS_COLOR_BIT = 1 << 0,
-    FEATURE_HAS_TEXTURE_BIT = 1 << 1,
-    FEATURE_HAS_NORMAL_BIT = 1 << 2
-};
-typedef uint32_t InterpFeaturesFlagBits;
-
 struct BeginCoeffs
 {
     Vec3 color;
@@ -19,7 +11,6 @@ struct BeginCoeffs
 
 struct InterpContext
 {
-    InterpFeaturesFlagBits interpFeatures;
     BeginCoeffs beginCoeffs;
     float w1;//barycentric coords
     float w2;//barycentric coords
@@ -33,7 +24,6 @@ struct InterpContext
     Vec3 C2C0;
     Vec3 N1N0;
     Vec3 N2N0;
-
 };
 
 struct Shader {

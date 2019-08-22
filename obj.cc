@@ -247,6 +247,16 @@ bool loadMesh(const char* model, Mesh* data)
             data->faces.push_back(face);
         }
     }
+
+	data->meshFeatureMask = FEATURE_NONE;
+	switch (ptrn) {
+		case PATTERN_VERT_TEXT:
+		case PATTERN_VERT_TEXT_NORM:
+			data->meshFeatureMask |= FEATURE_UVS;
+		default:
+			break;
+	}
+	
     printf("----------------------------------------\n");
     printf("MESH INFO:\n Faces = %lu\n VertexPositions = %lu\n Normals = %lu\n Texture Coords = %lu\n",
         data->faces.size(), data->vertPos.size(), data->normals.size(), data->texCoord.size());
@@ -283,10 +293,11 @@ void averageNormals(Mesh* mesh)
         normaliseVec3InPlace(mesh->normals[i]);
     }
 
+	mesh->meshFeatureMask |= FEATURE_NORMALS;
+
     printf("Averaged normals:\n");
     for(auto normal : mesh->normals)
         printf("Normal %f %f %f\n", normal.x, normal.y, normal.z);
-
 }
 
 void fillTangent(Mesh* mesh)
@@ -335,6 +346,9 @@ void fillTangent(Mesh* mesh)
             tangent = normaliseVec3(tangent - dotVec3(tangent, normal) * normal);
         }
     }
+
+	mesh->meshFeatureMask |= FEATURE_TANGENTS;
+
     for(uint32_t i = 0 ; i < mesh->tangents.size(); i++) {
         printf("Tangent vector %f %f %f\n",mesh->tangents[i].x,mesh->tangents[i].y,mesh->tangents[i].z);
     }

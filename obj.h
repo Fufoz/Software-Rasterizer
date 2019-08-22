@@ -15,6 +15,14 @@ struct Face
     int64_t tanIndex[3];
 };
 
+enum MeshFeatureFlags
+{
+	FEATURE_NONE     = 1 << 0,
+	FEATURE_NORMALS  = 1 << 1,
+	FEATURE_UVS      = 1 << 2,
+	FEATURE_TANGENTS = 1 << 3
+};
+
 struct Mesh
 {
     std::vector<Face> faces;
@@ -22,11 +30,13 @@ struct Mesh
     std::vector<Vec3> normals;
     std::vector<Vec3> texCoord;
     std::vector<Vec3> tangents;
+	int meshFeatureMask;
 };
 
-
-
 bool loadMesh(const char* model, Mesh* data);
+
 void averageNormals(Mesh* mesh);
+
 void fillTangent(Mesh* mesh);
+
 #endif
