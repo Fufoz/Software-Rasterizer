@@ -1,7 +1,10 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
+
+#include "math.h"
 #include <cstdint>
 #include <stddef.h>
+
 struct Texture
 {
     uint32_t width;
@@ -12,5 +15,7 @@ struct Texture
 };
 
 bool loadTexture(const char* path, Texture* out, bool flipImage = false);
+Vec3 sampleTexture3ch(Texture* sampler, Vec2 uvs);
+uint8_t sampleTexture1ch(Texture* sampler, Vec2 uvs);
 void unloadTexture(void* handle);
 #endif

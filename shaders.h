@@ -267,16 +267,6 @@ struct BumpShader : Shader {
         T2T0 = (uvs[2] - uvs[0]) / triArea;
     }
 
-    float texture2D(Texture* sampler, const Vec3& uvs)
-    {
-        if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
-            return 0.f;
-        int xOffset = uvs.u * (sampler->width - 1) * sampler->numc; 
-        int yOffset = uvs.v * (sampler->height - 1) * sampler->numc;// * sampler->width;
-        uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
-        return (float)(*pos)/255.f;
-    }
-
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         //sample texture
@@ -286,17 +276,17 @@ struct BumpShader : Shader {
         interpLight = normaliseVec3(interpLight);
         interpView = normaliseVec3(interpView);
 
-        int numLayers = 10;
+        int numLayers = 30;
         float layerStep = 1.f / (float)numLayers;
         float currentDiscreteHeight = 0.f;
         Vec2 uvStep = interpView.xy* 0.2f/(float)numLayers;///(float)(interpView.z * numLayers);
-        float currentSampledDepth = texture2D(sampler2dD, interpUVs);
+        float currentSampledDepth = sampleTexture1ch(sampler2dD, interpUVs.xy)/255.f;
 
         for(uint32_t i = 0; i < numLayers; i++) {
             interpUVs.u += uvStep.u;
             interpUVs.v -= uvStep.v;
             currentDiscreteHeight += layerStep;
-            currentSampledDepth = texture2D(sampler2dD, interpUVs);
+            currentSampledDepth = sampleTexture1ch(sampler2dD, interpUVs.xy)/255.f;
             
             if(currentDiscreteHeight > currentSampledDepth)
                 break;
@@ -317,17 +307,10 @@ struct BumpShader : Shader {
             return Vec3{};
         }
 
-        int tx = interpUVs.u * (sampler2d->width - 1);
-        int ty = interpUVs.v * (sampler2d->height - 1);
-        int textureOffset = tx * sampler2d->numc + ty * sampler2d->numc * sampler2d->width;
-                
-        uint8_t* position = sampler2d->data + textureOffset;
-        Vec3 color = {position[0], position[1], position[2]};
-        //return color;
-        uint8_t* normalPosition = sampler2dN->data + textureOffset;
+		Vec3 color = sampleTexture3ch(sampler2d, interpUVs.xy);
 
         //decode normal coords from normal map        
-        Vec3 normal = {(normalPosition[0] - 128.f)/128.f, (normalPosition[1] - 128.f)/128.f, (normalPosition[2] - 128.f)/128.f};
+        Vec3 normal = (sampleTexture3ch(sampler2dN, interpUVs.xy) - 128.f)/128.f; 
         normal = normaliseVec3(normal);
 
         Vec3 gl_fragColor = {};
@@ -338,7 +321,6 @@ struct BumpShader : Shader {
         gl_fragColor = (diffuseContribution + specularContribution + ambientContribution) ^ color;
         gl_fragColor = clamp(gl_fragColor, RGB_BLACK, RGB_WHITE);
         return gl_fragColor;
-
     }
     
 };

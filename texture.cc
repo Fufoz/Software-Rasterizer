@@ -25,6 +25,26 @@ bool loadTexture(const char* path, Texture* out, bool flipImage)
     return true; 
 }
 
+Vec3 sampleTexture3ch(Texture* sampler, Vec2 uvs)
+{
+    if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
+        return Vec3{};
+    int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
+    int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
+    uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
+    return Vec3{pos[0], pos[1], pos[2]};
+}
+
+uint8_t sampleTexture1ch(Texture* sampler, Vec2 uvs)
+{
+    if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
+        return 0;
+    int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
+    int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
+    uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
+    return pos[0];
+}
+
 void unloadTexture(void* handle)
 {
     stbi_image_free(handle);

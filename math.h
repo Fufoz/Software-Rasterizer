@@ -234,6 +234,11 @@ inline Vec3 operator-(const Vec3& left, const Vec3& right)
     return Vec3{left.x - right.x, left.y - right.y, left.z - right.z};
 }
 
+inline Vec3 operator-(const Vec3& left, float val)
+{
+    return Vec3{left.x - val, left.y - val, left.z - val};
+}
+
 inline Vec3& operator+=(Vec3& self, const Vec3& other)
 {
     self = self + other;
