@@ -32,7 +32,7 @@ Vec3 sampleTexture3ch(Texture* sampler, Vec2 uvs)
     int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
     int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
     uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
-    return Vec3{pos[0], pos[1], pos[2]};
+    return Vec3{(float)pos[0], (float)pos[1], (float)pos[2]};
 }
 
 uint8_t sampleTexture1ch(Texture* sampler, Vec2 uvs)

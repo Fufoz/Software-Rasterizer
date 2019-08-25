@@ -66,7 +66,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
 {
     float* zBuffer = context->zBuffer;
     SDL_Surface* surface = context->surface;
-
+       
     //preserve depth of a polygon via keeping its z coordinate in clip-space
     float z0Inv = 1.f / (float)v0.pos.w;
     float z1Inv = 1.f / (float)v1.pos.w;

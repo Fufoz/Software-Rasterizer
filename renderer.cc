@@ -185,14 +185,11 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             out.v1.texCoords = input.v1.texCoords;
             out.v2.texCoords = input.v2.texCoords;
             out.v3.texCoords = input.v3.texCoords;
+            Vec4 orig = out.v1.pos;
             out.v1 = shader.vertexShader(out.v1, 0);
             out.v2 = shader.vertexShader(out.v2, 1);
             out.v3 = shader.vertexShader(out.v3, 2);
-
-
-            //lightIntensity = std::abs(lightIntensity);
-            Vec3 renderColor = lightIntensity * object.flatColor;
-
+            Vec4 check = out.v1.pos * inverse(VP);
             //if the whole triangle inside the view frustum
             if( isInsideViewFrustum(out.v1.pos) &&
                 isInsideViewFrustum(out.v2.pos) &&
@@ -202,6 +199,13 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
                 ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
                 for(size_t i = 0; i < result.numTriangles; i++) {
 					Triangle& triangle = result.triangles[i];
+                    //Ugliest durtiest hack to keep shader interpolants correct after clipping
+                    triangle.v1.pos *= inverse(VP);
+                    triangle.v2.pos *= inverse(VP);
+                    triangle.v3.pos *= inverse(VP);
+                    triangle.v1 = shader.vertexShader(triangle.v1, 0);
+                    triangle.v2 = shader.vertexShader(triangle.v2, 1);
+                    triangle.v3 = shader.vertexShader(triangle.v3, 2);
                     drawTriangleHalfSpaceFlat(context, triangle.v1, triangle.v2, triangle.v3, shader);
                 }
             }

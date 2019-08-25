@@ -15,7 +15,8 @@ struct Texture
 };
 
 bool loadTexture(const char* path, Texture* out, bool flipImage = false);
+void unloadTexture(void* handle);
 Vec3 sampleTexture3ch(Texture* sampler, Vec2 uvs);
 uint8_t sampleTexture1ch(Texture* sampler, Vec2 uvs);
-void unloadTexture(void* handle);
+
 #endif

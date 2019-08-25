@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     cube1.texture = &cubeTexture;
     cube1.normalMap = &normalMap;
     cube1.heightMap = &heightMap;
-    cube1.transform.scale = Vec3{0.10f, 0.10f, 0.10f};
+    cube1.transform.scale = Vec3{0.1f, 0.1f, 0.1f};
     cube1.transform.translate = Vec3{0.f, 0.f, -3.f};
     cube1.flatColor = {255, 0, 0};
     cube1.mode = MODE_FLATCOLOR;
