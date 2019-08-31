@@ -185,11 +185,11 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             out.v1.texCoords = input.v1.texCoords;
             out.v2.texCoords = input.v2.texCoords;
             out.v3.texCoords = input.v3.texCoords;
-            Vec4 orig = out.v1.pos;
+
             out.v1 = shader.vertexShader(out.v1, 0);
             out.v2 = shader.vertexShader(out.v2, 1);
             out.v3 = shader.vertexShader(out.v3, 2);
-            Vec4 check = out.v1.pos * inverse(VP);
+
             //if the whole triangle inside the view frustum
             if( isInsideViewFrustum(out.v1.pos) &&
                 isInsideViewFrustum(out.v2.pos) &&
