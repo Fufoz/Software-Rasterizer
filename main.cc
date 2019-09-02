@@ -16,10 +16,7 @@ int main(int argc, char **argv)
 
     Camera camera;
     camera.camPos  = Vec3{0.f, 0.f, 3.f};
-    camera.forward = Vec3{0.f, 0.f, -1.f};
-    camera.up      = Vec3{0.f, 1.f, 0.f};
-    camera.pType   = PROJ_PERSPECTIVE;
-    
+
     Vec4 clrColor = Vec4{88.f, 93.f, 102.f, 255.f};
     mat4x4 perspective = perspectiveProjection(60.f, context.window.width / context.window.height, 0.1f, 10.f);
     mat4x4 viewPort = viewport(context.window.width, context.window.height);
@@ -64,7 +61,7 @@ int main(int argc, char **argv)
             renderObject(&context, cube1, camera);
         endFrame(&context);
         deltaTime = tick.stopMs();
-        printf("Frame took %.2f[ms] \n",deltaTime);
+        //printf("Frame took %.2f[ms] \n",deltaTime);
     }
 
     unloadTexture(cubeTexture.data);

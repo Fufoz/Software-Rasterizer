@@ -656,24 +656,24 @@ inline void logMat4x4(const char* tag, const mat4x4& in)
 
 inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f})
 {
-    Vec3 Z  = normaliseVec3(cameraPos - thing);
-    Vec3 At = cross(normaliseVec3(UpDir), Z);
-    Vec3 Up = cross(Z, At);
-    //printf("Rotation AXIS: Right{%f, %f, %f} Up{%f, %f, %f} Z{%f, %f, %f}\n",
-    //At.x, At.y, At.z, Up.x, Up.y, Up.z, Z.x, Z.y, Z.z);
-    mat4x4 rotationPart = {
-        At.x, Up.x, Z.x, 0,
-        At.y, Up.y, Z.y, 0,
-        At.z, Up.z, Z.z, 0,
-        0,    0,    0,   1
-    };
-    
-    mat4x4 translationPart  = loadIdentity();
-    translationPart.p[12] = -thing.x;
-    translationPart.p[13] = -thing.y;
-    translationPart.p[14] = -thing.z;
+   // thing = normaliseVec3(thing);
+    Vec3 zAxis  = normaliseVec3(cameraPos - thing);
 
-    return translationPart * rotationPart;
+    //looking straight up or down case handling
+    if(std::abs(dotVec3(zAxis, UpDir)) > 0.999f)
+        UpDir = {UpDir.z, UpDir.x, UpDir.y};
+
+    Vec3 xAxis = cross(normaliseVec3(UpDir), zAxis);
+    Vec3 yAxis = cross(zAxis, xAxis);
+
+    mat4x4 viewMat = {
+        xAxis.x, yAxis.x, zAxis.x, 0,
+        xAxis.y, yAxis.y, zAxis.y, 0,
+        xAxis.z, yAxis.z, zAxis.z, 0,
+        -dotVec3(thing, xAxis), -dotVec3(thing, yAxis), -dotVec3(thing, zAxis), 1
+    };
+
+    return viewMat;
 }
 
 inline mat4x4 rotateZ(float degrees)
@@ -759,7 +759,10 @@ inline Vec4 lerp(const Vec4& start, const Vec4& end, float amount)
     };
 }
 
-//For unit quaternions conjugate and inverse are identical
+//For unit quaternions conjugate and inverse are identical 
+//since magnitude of rotation quat is 1. (q^-1 = q*/||q||)
+//for pure rotation quats conjugate quat rotates in the 
+//direction opposite to the original quaternion
 inline Quat conjugate(const Quat& in)
 {
     return Quat{-in.x, -in.y, -in.z, in.w};
@@ -771,6 +774,24 @@ inline Quat operator*(const Quat& left, const Quat& right)
     Quat out = {};
     out.complex = left.complex * right.w + right.complex * left.w + cross(left.complex, right.complex);
     out.w = left.w * right.w - dotVec3(left.complex, right.complex);
+    return out;
+}
+
+inline float lengthQuat(const Quat& q)
+{
+    return sqrt(dotVec4(q.xyzw, q.xyzw));
+}
+
+inline Quat normalise(const Quat& q)
+{
+    Quat out = {};
+    float length = lengthQuat(q);
+    if(length > 0) {
+        out.x /= length;
+        out.y /= length;
+        out.z /= length;
+        out.w /= length;
+    }
     return out;
 }
 
