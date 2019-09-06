@@ -4,8 +4,6 @@
 #include "math.h"
 #include "input.h"
 
-//#define cameraSpeed 0.05f
-
 enum ProjectionType
 {
     PROJ_PERSPECTIVE,
@@ -15,8 +13,8 @@ enum ProjectionType
 struct Camera
 {
     Vec3 camPos;
-    Vec3 forward;
-    Vec3 up;
+    Vec3 up = {0.f, 1.f, 0.f};
+    Vec3 forward = {0.f, 0.f, -1.f};
     ProjectionType pType;
     mat4x4 worldToCameraTransform;
 };
@@ -24,7 +22,6 @@ struct Camera
 inline void updateCameraPosition(Camera* camera, double deltaTime)
 {
     const float cameraSpeed = deltaTime * 0.005f;
-//    printf("Camera speed %f\n",cameraSpeed);
     static float pitch = 0.f;
     static float yaw = -90.f;
 
@@ -40,17 +37,14 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
         camera->camPos += cameraSpeed * camera->up;
     if(isKeyPressed(BTN_CTRL)) //down
         camera->camPos -= cameraSpeed * camera->up;
-
-    //camera->up = 
     
     Vec2 mouseDelta = getDeltaMousePosition();
     yaw += mouseDelta.x * 0.5f;
     pitch += mouseDelta.y * -0.5f;
-    
-    if(std::abs(pitch) > 85.f) {
-        pitch = pitch < 0 ? -85.f : 85.f;
-    }
-    
+
+	//avoid scene flips at corner pitch angles 
+    pitch = std::abs(pitch) > 89.f ? (pitch < 0 ? -89.f : 89.f) : pitch; 
+
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));
     camera->forward.z = sin(toRad(yaw)) * cos(toRad(pitch));
@@ -59,5 +53,14 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
     camera->forward = normaliseVec3(camera->forward);
 	camera->up = normaliseVec3(camera->up * rotateY(pitch));
     camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward, camera->up);
+/*
+    Quat qPitch = quatFromAxisAndAngle(Vec3{1, 0, 0}, pitch);
+    Quat qYaw = quatFromAxisAndAngle(Vec3{0, 1, 0}, yaw);
+    Quat orientation = qPitch * qYaw;
+    Quat forwardQuat = {camera->forward.x, camera->forward.y, camera->forward.z, 0.f};
+    Quat updatedForward = orientation * forwardQuat * conjugate(orientation);
+    //camera->forward = normaliseVec3(updatedForward.complex);
+    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + updatedForward.complex);
+*/
 }
 #endif

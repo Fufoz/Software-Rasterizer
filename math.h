@@ -659,8 +659,8 @@ inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f
     Vec3 zAxis  = normaliseVec3(cameraPos - thing);
     Vec3 xAxis = normaliseVec3(cross(UpDir, zAxis));
     Vec3 yAxis = cross(zAxis, xAxis);
-//    printf("\tRight{%f, %f, %f}\n\tUp{%f, %f, %f}\n\tZ{%f, %f, %f}\n",
-//	xAxis.x, xAxis.y, xAxis.z, yAxis.x, yAxis.y, yAxis.z, zAxis.x, zAxis.y, zAxis.z);
+//  printf("\tRight{%f, %f, %f}\n\tUp{%f, %f, %f}\n\tZ{%f, %f, %f}\n",
+//		xAxis.x, xAxis.y, xAxis.z, yAxis.x, yAxis.y, yAxis.z, zAxis.x, zAxis.y, zAxis.z);
     mat4x4 viewMat = {
         xAxis.x, yAxis.x, zAxis.x, 0,
         xAxis.y, yAxis.y, zAxis.y, 0,
@@ -753,7 +753,10 @@ inline Vec4 lerp(const Vec4& start, const Vec4& end, float amount)
     };
 }
 
-//For unit quaternions conjugate and inverse are identical
+//For unit quaternions conjugate and inverse are identical 
+//since magnitude of rotation quat is 1. (q^-1 = q*/||q||)
+//for pure rotation quats conjugate quat rotates in the 
+//direction opposite to the original quaternion
 inline Quat conjugate(const Quat& in)
 {
     return Quat{-in.x, -in.y, -in.z, in.w};
@@ -765,6 +768,24 @@ inline Quat operator*(const Quat& left, const Quat& right)
     Quat out = {};
     out.complex = left.complex * right.w + right.complex * left.w + cross(left.complex, right.complex);
     out.w = left.w * right.w - dotVec3(left.complex, right.complex);
+    return out;
+}
+
+inline float lengthQuat(const Quat& q)
+{
+    return sqrt(dotVec4(q.xyzw, q.xyzw));
+}
+
+inline Quat normalise(const Quat& q)
+{
+    Quat out = {};
+    float length = lengthQuat(q);
+    if(length > 0) {
+        out.x /= length;
+        out.y /= length;
+        out.z /= length;
+        out.w /= length;
+    }
     return out;
 }
 
