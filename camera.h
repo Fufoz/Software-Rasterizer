@@ -48,19 +48,8 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));
     camera->forward.z = sin(toRad(yaw)) * cos(toRad(pitch));
-	printf("FWD: %f %f %f\n",camera->forward.x, camera->forward.y, camera->forward.z);
-	printf("Pitch %f\n", pitch);
+
     camera->forward = normaliseVec3(camera->forward);
-	camera->up = normaliseVec3(camera->up * rotateY(pitch));
-    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward, camera->up);
-/*
-    Quat qPitch = quatFromAxisAndAngle(Vec3{1, 0, 0}, pitch);
-    Quat qYaw = quatFromAxisAndAngle(Vec3{0, 1, 0}, yaw);
-    Quat orientation = qPitch * qYaw;
-    Quat forwardQuat = {camera->forward.x, camera->forward.y, camera->forward.z, 0.f};
-    Quat updatedForward = orientation * forwardQuat * conjugate(orientation);
-    //camera->forward = normaliseVec3(updatedForward.complex);
-    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + updatedForward.complex);
-*/
+    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward);
 }
 #endif

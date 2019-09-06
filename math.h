@@ -659,8 +659,7 @@ inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f
     Vec3 zAxis  = normaliseVec3(cameraPos - thing);
     Vec3 xAxis = normaliseVec3(cross(UpDir, zAxis));
     Vec3 yAxis = cross(zAxis, xAxis);
-//  printf("\tRight{%f, %f, %f}\n\tUp{%f, %f, %f}\n\tZ{%f, %f, %f}\n",
-//		xAxis.x, xAxis.y, xAxis.z, yAxis.x, yAxis.y, yAxis.z, zAxis.x, zAxis.y, zAxis.z);
+    
     mat4x4 viewMat = {
         xAxis.x, yAxis.x, zAxis.x, 0,
         xAxis.y, yAxis.y, zAxis.y, 0,
