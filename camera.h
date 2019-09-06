@@ -23,7 +23,7 @@ struct Camera
 
 inline void updateCameraPosition(Camera* camera, double deltaTime)
 {
-    const float cameraSpeed = deltaTime * 0.0005f;
+    const float cameraSpeed = deltaTime * 0.005f;
 //    printf("Camera speed %f\n",cameraSpeed);
     static float pitch = 0.f;
     static float yaw = -90.f;
@@ -50,14 +50,14 @@ inline void updateCameraPosition(Camera* camera, double deltaTime)
     if(std::abs(pitch) > 85.f) {
         pitch = pitch < 0 ? -85.f : 85.f;
     }
-
-//    printf("YAW=%f PITCH = %f\n",yaw,pitch);    
+    
     camera->forward.x = cos(toRad(yaw)) * cos(toRad(pitch));
     camera->forward.y = sin(toRad(pitch));
     camera->forward.z = sin(toRad(yaw)) * cos(toRad(pitch));
-
+	printf("FWD: %f %f %f\n",camera->forward.x, camera->forward.y, camera->forward.z);
+	printf("Pitch %f\n", pitch);
     camera->forward = normaliseVec3(camera->forward);
-    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward);
-
+	camera->up = normaliseVec3(camera->up * rotateY(pitch));
+    camera->worldToCameraTransform = lookAt(camera->camPos, camera->camPos + camera->forward, camera->up);
 }
 #endif

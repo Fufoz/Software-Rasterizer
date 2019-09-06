@@ -269,7 +269,7 @@ struct BumpShader : Shader {
         int numLayers = 30;
         float layerStep = 1.f / (float)numLayers;
         float currentDiscreteHeight = 0.f;
-        Vec2 uvStep = interpView.xy* 0.1f/(float)(numLayers*interpView.z);///(float)(interpView.z * numLayers);
+        Vec2 uvStep = interpView.xy* 0.1f/(float)(numLayers);//*interpView.z);///(float)(interpView.z * numLayers);
         float currentSampledDepth = sampleTexture1ch(sampler2dD, interpUVs.xy)/255.f;
 
         for(uint32_t i = 0; i < numLayers; i++) {

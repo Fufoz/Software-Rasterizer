@@ -21,10 +21,9 @@ int main(int argc, char **argv)
     camera.pType   = PROJ_PERSPECTIVE;
     
     Vec4 clrColor = Vec4{88.f, 93.f, 102.f, 255.f};
-    mat4x4 perspective = perspectiveProjection(60.f, context.window.width / context.window.height, 0.1f, 10.f);
+    mat4x4 perspective = perspectiveProjection(60.f, context.window.width / context.window.height, 0.1f, 100.f);
     mat4x4 viewPort = viewport(context.window.width, context.window.height);
     setRenderState(viewPort, perspective, clrColor);
-
 
     RenderObject cube1 = {};
     Texture cubeTexture = {};
@@ -47,8 +46,8 @@ int main(int argc, char **argv)
     cube1.texture = &cubeTexture;
     cube1.normalMap = &normalMap;
     cube1.heightMap = &heightMap;
-    cube1.transform.scale = Vec3{0.1f, 0.1f, 0.1f};
-    cube1.transform.translate = Vec3{0.f, 0.f, -3.f};
+    cube1.transform.scale = Vec3{1.1f, 1.1f, 1.1f};
+    cube1.transform.translate = Vec3{0.f, 0.f, -2.f};
     cube1.flatColor = {255, 0, 0};
     cube1.mode = MODE_FLATCOLOR;
 
@@ -64,7 +63,7 @@ int main(int argc, char **argv)
             renderObject(&context, cube1, camera);
         endFrame(&context);
         deltaTime = tick.stopMs();
-        printf("Frame took %.2f[ms] \n",deltaTime);
+//        printf("Frame took %.2f[ms] \n",deltaTime);
     }
 
     unloadTexture(cubeTexture.data);

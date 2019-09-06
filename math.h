@@ -656,24 +656,18 @@ inline void logMat4x4(const char* tag, const mat4x4& in)
 
 inline mat4x4 lookAt(Vec3 cameraPos, Vec3 thing, Vec3 UpDir = Vec3{0.f, 1.f, 0.f})
 {
-    Vec3 Z  = normaliseVec3(cameraPos - thing);
-    Vec3 At = cross(normaliseVec3(UpDir), Z);
-    Vec3 Up = cross(Z, At);
-    //printf("Rotation AXIS: Right{%f, %f, %f} Up{%f, %f, %f} Z{%f, %f, %f}\n",
-    //At.x, At.y, At.z, Up.x, Up.y, Up.z, Z.x, Z.y, Z.z);
-    mat4x4 rotationPart = {
-        At.x, Up.x, Z.x, 0,
-        At.y, Up.y, Z.y, 0,
-        At.z, Up.z, Z.z, 0,
-        0,    0,    0,   1
+    Vec3 zAxis  = normaliseVec3(cameraPos - thing);
+    Vec3 xAxis = normaliseVec3(cross(UpDir, zAxis));
+    Vec3 yAxis = cross(zAxis, xAxis);
+//    printf("\tRight{%f, %f, %f}\n\tUp{%f, %f, %f}\n\tZ{%f, %f, %f}\n",
+//	xAxis.x, xAxis.y, xAxis.z, yAxis.x, yAxis.y, yAxis.z, zAxis.x, zAxis.y, zAxis.z);
+    mat4x4 viewMat = {
+        xAxis.x, yAxis.x, zAxis.x, 0,
+        xAxis.y, yAxis.y, zAxis.y, 0,
+        xAxis.z, yAxis.z, zAxis.z, 0,
+        -dotVec3(thing, xAxis), -dotVec3(thing, yAxis), -dotVec3(thing, zAxis), 1
     };
-    
-    mat4x4 translationPart  = loadIdentity();
-    translationPart.p[12] = -thing.x;
-    translationPart.p[13] = -thing.y;
-    translationPart.p[14] = -thing.z;
-
-    return translationPart * rotationPart;
+	return viewMat;
 }
 
 inline mat4x4 rotateZ(float degrees)
