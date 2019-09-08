@@ -4,9 +4,10 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include "obj.h"
-#include "math.h"
+#include "maths.h"
 #include "texture.h"
 #include "camera.h"
+#include "shaders.h"
 
 struct Window
 {
@@ -48,22 +49,6 @@ struct RenderObject
     Vec3 flatColor = {1.f, 1.f, 1.f};
 };
 
-struct Vertex
-{
-    Vec4 pos;
-    Vec3 texCoords;
-    Vec3 normal;
-    Vec3 color;
-    Vec3 tangent;
-};
-
-struct Triangle
-{
-    Vertex v1;
-    Vertex v2;
-    Vertex v3;
-};
-
 //render State
 extern mat4x4 viewportTransform;
 extern mat4x4 perspectiveTransform;
@@ -81,7 +66,7 @@ void processInput(RenderContext* context);
 
 void beginFrame(RenderContext* context);
 
-void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera);
+void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera, Shader& shader);
 
 void endFrame(RenderContext* context);
 

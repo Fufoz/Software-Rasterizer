@@ -11,8 +11,7 @@ find_package(SDL REQUIRED)
 set(CMAKE_INSTALL_RPATH "$ORIGIN:${SDL_ROOT}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-add_executable(soft
-    main.cc
+add_library(soft STATIC
     input.cc
     texture.cc
     obj.cc
@@ -22,9 +21,8 @@ add_executable(soft
 )
 
 target_include_directories(soft PUBLIC ${SDL_INCLUDE_DIRS})
-target_link_libraries(soft ${SDL_LIBRARIES})
-
-install(TARGETS soft RUNTIME DESTINATION ./bin)
+target_link_libraries(soft PUBLIC ${SDL_LIBRARIES})
+add_subdirectory(examples)
 
 if(WIN32)
     set(SDL_RUNTIME ${SDL_ROOT}/bin/SDL2d.dll)

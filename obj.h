@@ -5,14 +5,14 @@
 #include <stdio.h>
 #include <cassert>
 
-#include "math.h"
+#include "maths.h"
 
 struct Face
 {
-    int64_t vIndex[3];
-    int64_t tIndex[3];
-    int64_t nIndex[3];
-    int64_t tanIndex[3];
+	int64_t vIndex[3];
+	int64_t tIndex[3];
+	int64_t nIndex[3];
+	int64_t tanIndex[3];
 };
 
 enum MeshFeatureFlags
@@ -25,11 +25,11 @@ enum MeshFeatureFlags
 
 struct Mesh
 {
-    std::vector<Face> faces;
-    std::vector<Vec3> vertPos;
-    std::vector<Vec3> normals;
-    std::vector<Vec3> texCoord;
-    std::vector<Vec3> tangents;
+	std::vector<Face> faces;
+	std::vector<Vec3> vertPos;
+	std::vector<Vec3> normals;
+	std::vector<Vec3> texCoord;
+	std::vector<Vec3> tangents;
 	int meshFeatureMask;
 };
 

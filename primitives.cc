@@ -78,6 +78,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
     if(triArea < 0)
         return;
+    
     shader.prepareInterpolants(v0, v1, v2, z0Inv, z1Inv, z2Inv, triArea);
     //compute triangle bounding box
     int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
@@ -97,33 +98,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
 
     float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
     float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
-/*
-    if(shader.interpContext.interpFeatures & FEATURE_HAS_COLOR_BIT) {
-        shader.interpContext.beginCoeffs.color = v0.color;
-        shader.interpContext.C1C0 = (v1.color - v0.color)/ triArea;
-        shader.interpContext.C2C0 = (v2.color - v0.color)/ triArea;
-    }
 
-    if(shader.interpContext.interpFeatures & FEATURE_HAS_NORMAL_BIT) {
-        v0.normal = v0.normal * z0Inv;//perspective correct attrib interp
-        v1.normal = v1.normal * z1Inv;
-        v2.normal = v2.normal * z2Inv;
-        shader.interpContext.beginCoeffs.normal = v0.normal;
-        shader.interpContext.N1N0 = (v1.normal - v0.normal)/ triArea;
-        shader.interpContext.N2N0 = (v2.normal - v0.normal)/ triArea;
-    }
-*/
-/*    if(shader.interpContext.interpFeatures & FEATURE_HAS_TEXTURE_BIT) {
-        v0.texCoords = v0.texCoords * z0Inv;//perspective correct attrib interp
-        v1.texCoords = v1.texCoords * z1Inv;
-        v2.texCoords = v2.texCoords * z2Inv;
-        shader.interpContext.beginCoeffs.uv = v0.texCoords;
-        shader.interpContext.T1T0x = (v1.texCoords.x - v0.texCoords.x)/ triArea;
-        shader.interpContext.T2T0x = (v2.texCoords.x - v0.texCoords.x)/ triArea;
-        shader.interpContext.T1T0y = (v1.texCoords.y - v0.texCoords.y)/ triArea;
-        shader.interpContext.T2T0y = (v2.texCoords.y - v0.texCoords.y)/ triArea;
-    }
-*/
     float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
@@ -146,8 +121,6 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
                     Vec3 gl_pixelCoord = {w1, w2, Z};
-                    shader.interpContext.w1 = w1;
-                    shader.interpContext.w2 = w2;
                     discardFragment = false;
                     Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
                     if(!discardFragment)

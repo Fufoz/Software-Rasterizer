@@ -1,11 +1,9 @@
 #include "renderer.h"
 #include "primitives.h"
 #include "input.h"
-#include "camera.h"
 #include "clipper.h"
 #include <stdio.h>
 #include <limits>
-#include "shaders.h"
 
 mat4x4 viewportTransform = {};
 mat4x4 perspectiveTransform = {};
@@ -128,7 +126,7 @@ static Triangle getTriangle(const Mesh& mesh, const Face& face)
     return out;
 }
 
-void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera)
+void renderObject(RenderContext* context, const RenderObject& object, const Camera& camera, Shader& shader)
 {
     mat4x4 modelToWorldTransform =  loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
@@ -139,11 +137,13 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     //GouraudShader shader = {};
     //FlatShader shader = {};
     //PhongShader shader = {};
-    BumpShader shader = {};
-    shader.sampler2d = object.texture;
-    shader.sampler2dN = object.normalMap;
-    shader.sampler2dD = object.heightMap; 
-    shader.in_VP = VP;
+//    BumpShader shader = {};
+//    shader.sampler2d = object.texture;
+//    shader.sampler2dN = object.normalMap;
+//    shader.sampler2dD = object.heightMap; 
+    shader.uniforms.in_VP = VP;
+    shader.uniforms.in_normalTransform = normalTransform;
+    shader.uniforms.in_cameraPosition = camera.camPos;
     //shader.in_Color = {100.f, 150.f, 250.f};
     
     //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
@@ -175,12 +175,12 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         //face culling
         if(lightIntensity >= 0.f) {
             ////////////////////////////////////////
-
+            shader.uniforms.in_lightIntensity = lightIntensity;
             //shader.intensity = lightIntensity;
             //shader.in_lightVector = cameraRay;
             //shader.in_viewVector = cameraRay;
-            shader.in_normalTransform = normalTransform;
-            shader.in_cameraPosition = camera.camPos;
+            //shader.in_normalTransform = normalTransform;
+            //shader.in_cameraPosition = camera.camPos;
 
             out.v1.texCoords = input.v1.texCoords;
             out.v2.texCoords = input.v2.texCoords;

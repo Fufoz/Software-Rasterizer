@@ -2,7 +2,6 @@
 #define PRIMITIVES_H
 
 #include "renderer.h"
-#include "shaders.h"
 
 void drawPixel(const SDL_Surface* surface, int x, int y, Vec3 color);
 void drawLine(const SDL_Surface* surface, int x0, int y0, int x1, int y1, Vec3 color);

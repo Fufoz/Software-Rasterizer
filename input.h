@@ -1,6 +1,6 @@
 #ifndef INPUT_H
 #define INPUT_H
-#include "math.h"
+#include "maths.h"
 
 enum KeyCode
 {

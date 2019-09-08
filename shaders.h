@@ -1,36 +1,20 @@
-#ifndef SHADER_H
-#define SHADER_H
-#include "renderer.h"
+#ifndef SHADERS_H
+#define SHADERS_H
 
-struct BeginCoeffs
+struct ShaderUniforms
 {
-    Vec3 color;
-    Vec3 normal;
-    Vec3 uv;
+    mat4x4 in_VP;
+    mat4x4 in_normalTransform;
+    Vec3   in_cameraPosition;
+    Vec3   in_flatColor;
+    float  in_lightIntensity;
 };
 
-struct InterpContext
+struct Shader
 {
-    BeginCoeffs beginCoeffs;
-    float w1;//barycentric coords
-    float w2;//barycentric coords
-    float T2T0x;
-    float T1T0x;
-    float T2T0y;
-    float T1T0y;
-    float W1W0;
-    float W2W0;
-    Vec3 C1C0;
-    Vec3 C2C0;
-    Vec3 N1N0;
-    Vec3 N2N0;
-};
-
-struct Shader {
-    InterpContext interpContext;
+    ShaderUniforms uniforms;
     virtual Vertex vertexShader(const Vertex& in, int vn) = 0;
     virtual Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard) = 0;
-
     virtual void prepareInterpolants(
         const Vertex& v1, const Vertex& v2, const Vertex& v3, 
         float invZ1, float invZ2, float invZ3,
@@ -39,19 +23,20 @@ struct Shader {
 
 struct DepthShader : Shader
 {
-    mat4x4 in_VP;
+    float zNear;
+    float zFar;
 
-    Vertex vertexShader(const Vertex& in)
+    Vertex vertexShader(const Vertex& in, int vn)
     {
         Vertex gl_Position = {};
-        gl_Position.pos = in.pos * in_VP;
+        gl_Position.pos = in.pos * uniforms.in_VP;
         return gl_Position;
     }
 
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         //normalise z values between 0 and 1
-        float z = (pixelCoords.z - 0.1f) / (10.f - 0.1f);
+        float z = (pixelCoords.z - zNear) / (zFar - zNear);
         Vec3 gl_fragColor = Vec3{z * 255.f, z * 255.f, z * 255.f };
         return gl_fragColor;
     }
@@ -63,24 +48,21 @@ struct DepthShader : Shader
         {
             
         }
+
 };
 
 struct FlatShader : Shader
 {
-    mat4x4 in_VP;
-    Vec3 in_ambient;
-    float intensity;
-
     Vertex vertexShader(const Vertex& in, int vn)
     {
         Vertex gl_Position = {};
-        gl_Position.pos = in.pos * in_VP;
+        gl_Position.pos = in.pos *uniforms.in_VP;
         return gl_Position;
     }
 
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
-        Vec3 gl_fragColor = in_ambient * intensity;        
+        Vec3 gl_fragColor = uniforms.in_flatColor * uniforms.in_lightIntensity;        
         return gl_fragColor;
     }
 
@@ -92,7 +74,7 @@ struct FlatShader : Shader
             
         }
 };
-
+/*
 struct GouraudShader : Shader
 {
     mat4x4 in_VP;
@@ -126,13 +108,33 @@ struct GouraudShader : Shader
         Vec3 gl_fragColor = interpContext.beginCoeffs.color + interpContext.w1 * interpContext.C1C0 + interpContext.w2 * interpContext.C2C0;
         return gl_fragColor;
     }
-      void prepareInterpolants(
+
+    void prepareInterpolants(
         const Vertex& v1, const Vertex& v2, const Vertex& v3, 
         float invZ1, float invZ2, float invZ3,
         float triArea)
-        {
+    {
+        lightVector[0] *= invZ1;
+        lightVector[1] *= invZ2;
+        lightVector[2] *= invZ3;
 
-        }
+        L1L0 = (lightVector[1] - lightVector[0]) / triArea;
+        L2L0 = (lightVector[2] - lightVector[0]) / triArea;
+
+        viewVector[0] *= invZ1;
+        viewVector[1] *= invZ2;
+        viewVector[2] *= invZ3;
+
+        V1V0 = (viewVector[1] - viewVector[0]) / triArea;
+        V2V0 = (viewVector[2] - viewVector[0]) / triArea;
+        
+        uvs[0] = v1.texCoords * invZ1;
+        uvs[1] = v2.texCoords * invZ2;
+        uvs[2] = v3.texCoords * invZ3;
+
+        T1T0 = (uvs[1] - uvs[0]) / triArea;
+        T2T0 = (uvs[2] - uvs[0]) / triArea;
+    }
 
 };
 
@@ -178,13 +180,9 @@ struct PhongShader : Shader
         float invZ1, float invZ2, float invZ3,
         float triArea){}
 };
-
+*/
 //bump mapping(a.k.a normal mapping)
 struct BumpShader : Shader {
-
-    mat4x4 in_VP;
-    mat4x4 in_normalTransform;
-    Vec3 in_cameraPosition;
 
     Vec3 lightVector[3];
     Vec3 viewVector[3];
@@ -199,18 +197,18 @@ struct BumpShader : Shader {
     int glossinessPower = 4;
 
     Vec3 V1V0,V2V0,L1L0,L2L0,T1T0,T2T0;
-    
+
     Vertex vertexShader(const Vertex& in, int vn)
     {
         Vertex gl_Position = {};
 
         //we're currently assuming that light comes from the same
         // spot where the camera is
-        Vec3 view = normaliseVec3(in_cameraPosition - in.pos.xyz);
+        Vec3 view = normaliseVec3(uniforms.in_cameraPosition - in.pos.xyz);
         Vec3 light = view;
 
-        gl_Position.normal = normaliseVec3(in.normal * in_normalTransform);
-        gl_Position.tangent = normaliseVec3(in.tangent * in_normalTransform);
+        gl_Position.normal = normaliseVec3(in.normal * uniforms.in_normalTransform);
+        gl_Position.tangent = normaliseVec3(in.tangent * uniforms.in_normalTransform);
         Vec3 bitangent = normaliseVec3(cross(gl_Position.normal, gl_Position.tangent));
 
         //move view and light vectors to tangent space
@@ -224,10 +222,11 @@ struct BumpShader : Shader {
 
         gl_Position.texCoords = in.texCoords;
 
-        gl_Position.pos = in.pos * in_VP;
+        gl_Position.pos = in.pos * uniforms.in_VP;
 
         return gl_Position;
     }
+
 
     void prepareInterpolants(
         const Vertex& v1, const Vertex& v2, const Vertex& v3, 
@@ -259,7 +258,6 @@ struct BumpShader : Shader {
 
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
-        //sample texture
         Vec3 interpUVs = (uvs[0] + pixelCoords.u * T1T0 + pixelCoords.v * T2T0) * pixelCoords.z; 
         Vec3 interpLight = (lightVector[0] + pixelCoords.u * L1L0 + pixelCoords.v * L2L0) * pixelCoords.z; 
         Vec3 interpView = (viewVector[0] + pixelCoords.u * V1V0 + pixelCoords.v * V2V0) * pixelCoords.z; 
@@ -269,7 +267,7 @@ struct BumpShader : Shader {
         int numLayers = 30;
         float layerStep = 1.f / (float)numLayers;
         float currentDiscreteHeight = 0.f;
-        Vec2 uvStep = interpView.xy* 0.2f/(float)(numLayers*interpView.z);///(float)(interpView.z * numLayers);
+        Vec2 uvStep = interpView.xy* 0.2f/(float)(numLayers);///(float)(interpView.z * numLayers);
         float currentSampledDepth = 1.f - sampleTexture1ch(sampler2dD, interpUVs.xy)/255.f;
 
         for(uint32_t i = 0; i < numLayers; i++) {

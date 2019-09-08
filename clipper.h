@@ -1,6 +1,6 @@
 #ifndef CLIPPER_H
 #define CLIPPER_H
-#include "math.h"
+#include "maths.h"
 #include "renderer.h"
 
 #define MAX_CLIPPED_TRIANGLE_COUNT 5

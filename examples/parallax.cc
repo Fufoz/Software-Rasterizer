@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <algorithm>
+
+#include <limits>
 #include "obj.h"
 #include "timer.h"
-#include <limits>
-#include "math.h"
+#include "maths.h"
 #include "input.h"
 #include "renderer.h"
 #include "camera.h"
@@ -48,6 +49,11 @@ int main(int argc, char **argv)
     cube1.flatColor = {255, 0, 0};
     cube1.mode = MODE_FLATCOLOR;
 
+    BumpShader shader = {};
+    shader.sampler2d = &cubeTexture;
+    shader.sampler2dD = &heightMap;
+    shader.sampler2dN = &normalMap;
+    
     Timer tick = {};
     double deltaTime = 0.f;
     while(!windowClosed()) {
@@ -57,7 +63,7 @@ int main(int argc, char **argv)
         updateCameraPosition(&camera, deltaTime);
 
         beginFrame(&ctx);
-            renderObject(&ctx, cube1, camera);
+            renderObject(&ctx, cube1, camera, shader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
         //printf("Frame took %.2f[ms] \n",deltaTime);
