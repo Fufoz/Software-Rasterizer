@@ -27,13 +27,31 @@ int main(int argc, char **argv)
     if(!loadMesh("./resources/monkey.obj", &monkeyMesh))
         return -1;
 
-    FlatShader shader = {};
-    shader.uniforms.in_flatColor = {32.f, 64.f, 123.f};
+    averageNormals(&monkeyMesh);
+
+    FlatShader fshader = {};
+    fshader.uniforms.in_flatColor = {255.f,255.f,0.f};
 
     RenderObject monkey1 = {};
     monkey1.mesh = &monkeyMesh;
     monkey1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
     monkey1.transform.translate = Vec3{0.f, 0.f, -1.f};
+
+    RenderObject monkey2 = {};
+    monkey2.mesh = &monkeyMesh;
+    monkey2.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
+    monkey2.transform.translate = Vec3{2.f, 0.f, -1.f};
+
+    RenderObject monkey3 = {};
+    monkey3.mesh = &monkeyMesh;
+    monkey3.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
+    monkey3.transform.translate = Vec3{1.f, 2.f, -1.f};
+
+    GouraudShader gshader = {};
+    gshader.uniforms.in_flatColor = {255.f,69.f,0.f};
+
+    PhongShader pshader = {};
+    pshader.uniforms.in_flatColor = {154.f,205.f,50.f};
 
     Timer tick = {};
     double deltaTime = 0.f;
@@ -44,7 +62,9 @@ int main(int argc, char **argv)
         updateCameraPosition(&camera, deltaTime);
 
         beginFrame(&ctx);
-            renderObject(&ctx, monkey1, camera, shader);
+            renderObject(&ctx, monkey1, camera, fshader);
+            renderObject(&ctx, monkey2, camera, gshader);
+            renderObject(&ctx, monkey3, camera, pshader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
         printf("Frame took %.2f[ms] \n",deltaTime);

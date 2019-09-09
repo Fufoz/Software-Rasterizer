@@ -177,7 +177,7 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
             ////////////////////////////////////////
             shader.uniforms.in_lightIntensity = lightIntensity;
             //shader.intensity = lightIntensity;
-            //shader.in_lightVector = cameraRay;
+            shader.uniforms.in_centerView = cameraRay;
             //shader.in_viewVector = cameraRay;
             //shader.in_normalTransform = normalTransform;
             //shader.in_cameraPosition = camera.camPos;

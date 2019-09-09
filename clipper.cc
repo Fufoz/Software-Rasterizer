@@ -102,7 +102,7 @@ static VertexBuffer clipAgainstEdge(const VertexBuffer& in, PlaneBits clipPlane)
                 //printf("CLIPPER: IN_IN\n");
                 vbPushData(out, endPoint);//IN_IN
             } else {
-            //IN_OUT
+                //IN_OUT
                 //printf("CLIPPER: IN_OUT\n");
                 //push straddled point
                 Vertex straddledPoint = intersectPlaneSegment(startPoint, endPoint, clipPlane);
