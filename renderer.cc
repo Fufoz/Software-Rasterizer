@@ -131,24 +131,10 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
     mat4x4 modelToWorldTransform =  loadScale(object.transform.scale) * loadTranslation(object.transform.translate);
     mat4x4 VP = camera.worldToCameraTransform * perspectiveTransform;
     mat4x4 normalTransform = inverse(transpose(modelToWorldTransform));
-    //logMat4x4("MODEL MAT",modelToWorldTransform);
-    //logMat4x4("NORMAL MAT",normalTransform);
-    //DepthShader shader = {};
-    //GouraudShader shader = {};
-    //FlatShader shader = {};
-    //PhongShader shader = {};
-//    BumpShader shader = {};
-//    shader.sampler2d = object.texture;
-//    shader.sampler2dN = object.normalMap;
-//    shader.sampler2dD = object.heightMap; 
+
     shader.uniforms.in_VP = VP;
     shader.uniforms.in_normalTransform = normalTransform;
     shader.uniforms.in_cameraPosition = camera.camPos;
-    //shader.in_Color = {100.f, 150.f, 250.f};
-    
-    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT;
-    //shader.interpContext.interpFeatures = FEATURE_HAS_NORMAL_BIT | FEATURE_HAS_TEXTURE_BIT;
-//    printf("Camera forward %f %f %f\n", camera.forward.x, camera.forward.y, camera.forward.z);
 
     for(uint32_t i = 0; i < object.mesh->faces.size(); i++) {
 
@@ -172,15 +158,11 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
         Vec3 cameraRay = normaliseVec3(camera.camPos - centroid);
         float lightIntensity = dotVec3(cameraRay, faceNormal);
 
-        //face culling
+        //backface culling
         if(lightIntensity >= 0.f) {
             ////////////////////////////////////////
             shader.uniforms.in_lightIntensity = lightIntensity;
-            //shader.intensity = lightIntensity;
             shader.uniforms.in_centerView = cameraRay;
-            //shader.in_viewVector = cameraRay;
-            //shader.in_normalTransform = normalTransform;
-            //shader.in_cameraPosition = camera.camPos;
 
             out.v1.texCoords = input.v1.texCoords;
             out.v2.texCoords = input.v2.texCoords;
