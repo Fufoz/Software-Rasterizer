@@ -16,11 +16,17 @@ struct Window
     int height;
 };
 
-struct RenderContext
+struct RenderTargets
 {
     float* zBuffer;
-    SDL_Surface* surface;
+    uint8_t* cBuffer;
+};
+
+struct RenderContext
+{
     Window window;
+    RenderTargets rtargets;
+    SDL_Surface* surface;
 };
 
 struct Transform

@@ -92,7 +92,7 @@ struct GouraudShader : Shader
         gl_Position.normal = normaliseVec3(in.normal * uniforms.in_normalTransform);
         Vec3 in_viewVector = uniforms.in_centerView;
 
-        //assume that light comes from the same dorection where the camera is
+        //assume that light comes from the same direction where the camera is
         Vec3 in_lightVector = in_viewVector;
         Vec3 reflectedVector = 2.f * dotVec3(gl_Position.normal, in_lightVector) * gl_Position.normal - in_lightVector;
         //here we're assuming that light intencity is {1,1,1}

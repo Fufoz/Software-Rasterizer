@@ -64,7 +64,7 @@ void drawWireFrame(const SDL_Surface* surface, Vec4 v0, Vec4 v1, Vec4 v2, Vec3 c
 
 void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
-    float* zBuffer = context->zBuffer;
+    float* zBuffer = context->rtargets.zBuffer;
     SDL_Surface* surface = context->surface;
        
     //preserve depth of a polygon via keeping its z coordinate in clip-space
@@ -103,7 +103,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
     bool discardFragment = false;
-    
+
     for(int y = topY; y > botY; y--) {
 
         float w0 = w0StartRow;

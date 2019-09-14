@@ -63,8 +63,8 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
     if(!ptr)
         return false;
 
-    context->zBuffer = ptr;
-    clearDepthBuffer(context->zBuffer, width, height);
+    context->rtargets.zBuffer = ptr;
+    clearDepthBuffer(context->rtargets.zBuffer, width, height);
     return true;
 }
 
@@ -81,14 +81,14 @@ void beginFrame(RenderContext* context)
     if(context->surface->w != context->window.width || context->surface->h != context->window.height) {
         context->window.width = context->surface->w;
         context->window.height = context->surface->h;
-        free(context->zBuffer);
+        free(context->rtargets.zBuffer);
         float* ptr = (float*)malloc(context->window.width * context->window.height * sizeof(float));
         assert(ptr);
-        context->zBuffer = ptr;
+        context->rtargets.zBuffer = ptr;
         viewportTransform = viewport(context->window.width, context->window.height);
     }
 
-    clearDepthBuffer(context->zBuffer, context->window.width, context->window.height);
+    clearDepthBuffer(context->rtargets.zBuffer, context->window.width, context->window.height);
 
     SDL_FillRect(context->surface, NULL, SDL_MapRGBA(context->surface->format,
         clearColor.R,
