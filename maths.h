@@ -394,9 +394,21 @@ inline Vec4& operator+=(Vec4& self, const Vec4& other)
     return self;
 }
 
+inline Vec4& operator+=(Vec4& self, float value)
+{
+    self = {self.x + value, self.y + value, self.z + value, self.w + value};
+    return self;
+}
+
 inline Vec4& operator-=(Vec4& self, const Vec4& other)
 {
     self = self - other;
+    return self;
+}
+
+inline Vec4& operator-=(Vec4& self, float value)
+{
+    self = {self.x - value, self.y - value, self.z - value, self.w - value};
     return self;
 }
 
@@ -471,7 +483,7 @@ inline mat4x4 viewport(float screenWidth, float screenHeight)
         screenWidth/2.f,        0,                   0, 0,
         0,                    screenHeight/2.f,      0, 0,
         0,                    0,                     1, 0,
-        screenWidth/2.f-0.5f, screenHeight/2.f-0.5f, 0, 1
+        screenWidth/2.f - 0.5f, screenHeight/2.f - 0.5f, 0, 1
     };
 
 }
