@@ -62,7 +62,7 @@ void drawWireFrame(const SDL_Surface* surface, Vec4 v0, Vec4 v1, Vec4 v2, Vec3 c
     drawLine(surface, v2.x, v2.y, v0.x, v0.y, color);
 }
 
-void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
+void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
     float* zBuffer = context->rtargets.zBuffer;
     SDL_Surface* surface = context->surface;
@@ -94,7 +94,7 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     int leftX  = max((min(min(x0, x1), x2)) >> 4, 0);
     int botY   = max((min(min(y0, y1), y2)) >> 4, 0);
     int rightX = min((max(max(x0, x1), x2)) >> 4, context->window.width - 1);
-        
+
     //calculate row and column step in barycentric coordinates
     int A01 = y0 - y1;
     int B01 = x1 - x0;
@@ -112,7 +112,6 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     int FA20 = int(unsigned(A20) << 4);
     int FB20 = int(unsigned(B20) << 4);
 	
-
     float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
     float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
 	
@@ -160,112 +159,79 @@ void drawTriangleHalfSpaceFlat(RenderContext* context, Vertex v0, Vertex v1, Ver
     }
 }
 
-
-static const uint8_t precision = 4;
-//triangle setup for each sample
-//interate in subpixel steps
-void rasterizeTriangle4xMSAA(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
+struct SampleRastInfo
 {
-    float* zBuffer = context->rtargets.zBuffer;
-    uint8_t* cBuffer = context->rtargets.cBuffer;    
-    SDL_Surface* surface = context->surface;
-       
-    //preserve depth of a polygon via keeping its z coordinate in clip-space
-    float z0Inv = 1.f / (float)v0.pos.w;
-    float z1Inv = 1.f / (float)v1.pos.w;
-    float z2Inv = 1.f / (float)v2.pos.w;
-    
-    v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
-    v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
-    v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
-    
-    const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
-    if(triArea < 0)
-        return;
-    
-    shader.prepareInterpolants(v0, v1, v2, z0Inv, z1Inv, z2Inv, triArea);
-    
+	float w0StartRow;
+	float w1StartRow;
+	float w2StartRow;
+	int FA01;
+	int FB01;
+	int FA12;
+	int FB12;
+	int FA20;
+	int FB20;
+};
+
+SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, uint8_t sX, uint8_t sY)
+{
+	SampleRastInfo info = {};
+	//28.4 fixed format
+	int x0 = std::floor(16.f * v0.x + 0.5f) + sX;
+	int x1 = std::floor(16.f * v1.x + 0.5f) + sX;
+	int x2 = std::floor(16.f * v2.x + 0.5f) + sX;
+	int y0 = std::floor(16.f * v0.y + 0.5f) + sY;
+	int y1 = std::floor(16.f * v1.y + 0.5f) + sY;
+	int y2 = std::floor(16.f * v2.y + 0.5f) + sY;
+
     //compute triangle bounding box
-    int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
-    int leftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);
-    int botY   = min(min(v0.pos.y, v1.pos.y), v2.pos.y);
-    int rightX = max(max(v0.pos.x, v1.pos.x), v2.pos.x);
-    //clamp against pixel space coords
-    topY = clamp(topY, 0, context->window.height - 1);
-    leftX = clamp(leftX, 0, context->window.width - 1);
-    botY = clamp(botY, 0, context->window.height - 1);
-    rightX = clamp(rightX, 0, context->window.width - 1);
+    int topY   = min((max(max(y0, y1), y2)), context->window.height - 1);
+    int leftX  = max((min(min(x0, x1), x2)), 0);
+    int botY   = max((min(min(y0, y1), y2)), 0);
+    int rightX = min((max(max(x0, x1), x2)), context->window.width - 1);
+	
+	topY /= 16.f;
+	leftX /= 16.f;
+	botY /= 16.f;
+	rightX /= 16.f;
+
     //calculate row and column step in barycentric coordinates
-    float A01 = v0.pos.y - v1.pos.y;
-    float B01 = v1.pos.x - v0.pos.x;
+    int A01 = y0 - y1;
+    int B01 = x1 - x0;
 
-    float A12 = v1.pos.y - v2.pos.y;
-    float B12 = v2.pos.x - v1.pos.x;
+    int A12 = y1 - y2;
+    int B12 = x2 - x1;
 
-    float A20 = v2.pos.y - v0.pos.y;
-    float B20 = v0.pos.x - v2.pos.x;
+    int A20 = y2 - y0;
+    int B20 = x0 - x2;
 
-    float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
-    float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
+    int FA01 = int(unsigned(A01) << 4);
+    int FB01 = int(unsigned(B01) << 4);
+    int FA12 = int(unsigned(A12) << 4);
+    int FB12 = int(unsigned(B12) << 4);
+    int FA20 = int(unsigned(A20) << 4);
+    int FB20 = int(unsigned(B20) << 4);
 
-    float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-    float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-    float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-    bool discardFragment = false;
-    
-    //msaa setup
-    int step = 0x10;
-    int subMask = 0xf;
-    v0.pos *= step;
-    v1.pos *= step;
-    v2.pos *= step;
+	int fleftX = leftX << 4;
+	int ftopY =  topY << 4;
 
-    //compute triangle bounding box
-    int subTopY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
-    int subLeftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);
-    int subBotY   = min(min(v0.pos.y, v1.pos.y), v2.pos.y);
-    int subRightX = max(max(v0.pos.x, v1.pos.x), v2.pos.x);
+    int w0StartRow = (x2 - x1) * (ftopY - y1) - (fleftX - x1) * (y2 - y1);
+	int w1StartRow = (x0 - x2) * (ftopY - y2) - (fleftX - x2) * (y0 - y2);
+	int w2StartRow = (x1 - x0) * (ftopY - y0) - (fleftX - x0) * (y1 - y0);
+	
+	info.w0StartRow = w0StartRow;
+	info.w1StartRow = w1StartRow;
+	info.w2StartRow = w2StartRow;
+	info.FA01 = FA01;
+	info.FB01 = FB01;
+	info.FA12 = FA12;
+	info.FB12 = FB12;
+	info.FA20 = FA20;
+	info.FB20 = FB20;
 
-    subTopY = (subTopY + subMask) & (~subMask);
-    subLeftX = (subLeftX + subMask) & (~subMask);
-    subBotY = (subBotY + subMask) & (~subMask);
-    subRightX = (subRightX + subMask) & (~subMask);
-
-    for(int y = subTopY; y > subBotY; y-=step) {
-
-        float w0 = w0StartRow;
-        float w1 = w1StartRow;
-        float w2 = w2StartRow;
-//printf("loop %d\n",y);
-        for(int x = subLeftX; x <= subRightX; x+=step) {
-			//proper fill rule handling is too time consuming in tight rasterizer loops
-            if( w0 >=0 && w1>=0 && w2>=0) {              
-                //we're basically interpolating depth values in camera space
-                //to get perspective correct interpolation
-                float Z = z0Inv + w1 * Z1Z0Inv + w2 * Z2Z0Inv;
-                //to get back to screen space
-                Z = 1.f / Z;
-                if( Z < zBuffer[y>>4 * surface->w + x>>4]) {
-                    zBuffer[y>>4 * surface->w + x>>4] = Z;
-                    Vec3 gl_pixelCoord = {w1, w2, Z};
-                    discardFragment = false;
-                    Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
-                    if(!discardFragment)
-                        drawPixel(surface, x>>4, y>>4, finalColor);
-                }
-            }
-			
-            w0 += A12;
-            w1 += A20;
-            w2 += A01;
-        }
-
-        w0StartRow -= B12;
-        w1StartRow -= B20;
-        w2StartRow -= B01;
-    }
+	return info;
 }
-void drawTriangleHalfSpaceFlatGood(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
+
+void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
     float* zBuffer = context->rtargets.zBuffer;
     SDL_Surface* surface = context->surface;
@@ -278,52 +244,93 @@ void drawTriangleHalfSpaceFlatGood(RenderContext* context, Vertex v0, Vertex v1,
     v0.pos = perspectiveDivide(v0.pos) * viewportTransform;
     v1.pos = perspectiveDivide(v1.pos) * viewportTransform;
     v2.pos = perspectiveDivide(v2.pos) * viewportTransform;
+
     const float triArea = computeArea(v0.pos.xyz, v1.pos.xyz, v2.pos.xyz);
     if(triArea < 0)
         return;
     
     shader.prepareInterpolants(v0, v1, v2, z0Inv, z1Inv, z2Inv, triArea);
+	//28.4 fixed format
+	int x0 = std::floor(16.f * v0.pos.x + 0.5f);
+	int x1 = std::floor(16.f * v1.pos.x + 0.5f);
+	int x2 = std::floor(16.f * v2.pos.x + 0.5f);
+	int y0 = std::floor(16.f * v0.pos.y + 0.5f);
+	int y1 = std::floor(16.f * v1.pos.y + 0.5f);
+	int y2 = std::floor(16.f * v2.pos.y + 0.5f);
+
     //compute triangle bounding box
-    int topY   = max(max(v0.pos.y, v1.pos.y), v2.pos.y);
-    int leftX  = min(min(v0.pos.x, v1.pos.x), v2.pos.x);
-    int botY   = min(min(v0.pos.y, v1.pos.y), v2.pos.y);
-    int rightX = max(max(v0.pos.x, v1.pos.x), v2.pos.x);
+    int topY   = min((max(max(y0, y1), y2)) >> 4, context->window.height - 1);
+    int leftX  = max((min(min(x0, x1), x2)) >> 4, 0);
+    int botY   = max((min(min(y0, y1), y2)) >> 4, 0);
+    int rightX = min((max(max(x0, x1), x2)) >> 4, context->window.width - 1);
 
     //calculate row and column step in barycentric coordinates
-    float A01 = v0.pos.y - v1.pos.y;
-    float B01 = v1.pos.x - v0.pos.x;
+    int A01 = y0 - y1;
+    int B01 = x1 - x0;
 
-    float A12 = v1.pos.y - v2.pos.y;
-    float B12 = v2.pos.x - v1.pos.x;
+    int A12 = y1 - y2;
+    int B12 = x2 - x1;
 
-    float A20 = v2.pos.y - v0.pos.y;
-    float B20 = v0.pos.x - v2.pos.x;
+    int A20 = y2 - y0;
+    int B20 = x0 - x2;
 
+    int FA01 = int(unsigned(A01) << 4);
+    int FB01 = int(unsigned(B01) << 4);
+    int FA12 = int(unsigned(A12) << 4);
+    int FB12 = int(unsigned(B12) << 4);
+    int FA20 = int(unsigned(A20) << 4);
+    int FB20 = int(unsigned(B20) << 4);
+	
     float Z1Z0Inv = (z1Inv - z0Inv) / triArea;
     float Z2Z0Inv = (z2Inv - z0Inv) / triArea;
+	
+	int fleftX = leftX << 4;
+	int ftopY =  topY << 4;
 
-    float w0StartRow = computeArea(v1.pos.xyz, v2.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-    float w1StartRow = computeArea(v2.pos.xyz, v0.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
-    float w2StartRow = computeArea(v0.pos.xyz, v1.pos.xyz, Vec3{(float)leftX, (float)topY, 0});
+    int w0StartRow = (x2 - x1) * (ftopY - y1) - (fleftX - x1) * (y2 - y1);
+	int w1StartRow = (x0 - x2) * (ftopY - y2) - (fleftX - x2) * (y0 - y2);
+	int w2StartRow = (x1 - x0) * (ftopY - y0) - (fleftX - x0) * (y1 - y0);
+
     bool discardFragment = false;
+
+	SampleRastInfo s1 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[0], sampleLocY[0]);
+	SampleRastInfo s2 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[1], sampleLocY[1]);
+	SampleRastInfo s3 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[2], sampleLocY[2]);
+	SampleRastInfo s4 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[3], sampleLocY[3]);
 
     for(int y = topY; y > botY; y--) {
 
-        float w0 = w0StartRow;
-        float w1 = w1StartRow;
-        float w2 = w2StartRow;
+        int w0 = w0StartRow;
+        int w1 = w1StartRow;
+        int w2 = w2StartRow;
+
+        int w0s1 = s1.w0StartRow;
+        int w1s1 = s1.w1StartRow;
+        int w2s1 = s1.w2StartRow;
+
+        int w0s2 = s2.w0StartRow;
+        int w1s2 = s2.w1StartRow;
+        int w2s2 = s2.w2StartRow;
+
+        int w0s3 = s3.w0StartRow;
+        int w1s3 = s3.w1StartRow;
+        int w2s3 = s3.w2StartRow;
+
+        int w0s4 = s4.w0StartRow;
+        int w1s4 = s4.w1StartRow;
+        int w2s4 = s4.w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
 			//proper fill rule handling is too time consuming in tight rasterizer loops
-            if( w0 >=0 && w1>=0 && w2>=0) {              
+            if( w0>=0 && w1 >=0 && w2>=0) {              
                 //we're basically interpolating depth values in camera space
                 //to get perspective correct interpolation
-                float Z = z0Inv + w1 * Z1Z0Inv + w2 * Z2Z0Inv;
+                float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
                 //to get back to screen space
                 Z = 1.f / Z;
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
-                    Vec3 gl_pixelCoord = {w1, w2, Z};
+                    Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
                     discardFragment = false;
                     Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
                     if(!discardFragment)
@@ -331,13 +338,46 @@ void drawTriangleHalfSpaceFlatGood(RenderContext* context, Vertex v0, Vertex v1,
                 }
             }
 			
-            w0 += A12;
-            w1 += A20;
-            w2 += A01;
+            w0 += FA12;
+            w1 += FA20;
+            w2 += FA01;
+
+            w0s1 += s1.FA12;
+            w1s1 += s1.FA20;
+            w2s1 += s1.FA01;
+
+            w0s2 += s2.FA12;
+            w1s2 += s2.FA20;
+            w2s2 += s2.FA01;
+
+            w0s3 += s3.FA12;
+            w1s3 += s3.FA20;
+            w2s3 += s3.FA01;
+
+            w0s4 += s4.FA12;
+            w1s4 += s4.FA20;
+            w2s4 += s4.FA01;
         }
 
-        w0StartRow -= B12;
-        w1StartRow -= B20;
-        w2StartRow -= B01;
+        w0StartRow -= FB12;
+        w1StartRow -= FB20;
+        w2StartRow -= FB01;
+
+        s1.w0StartRow -= s1.FB12;
+        s1.w1StartRow -= s1.FB20;
+        s1.w2StartRow -= s1.FB01;
+
+        s2.w0StartRow -= s2.FB12;
+        s2.w1StartRow -= s2.FB20;
+        s2.w2StartRow -= s2.FB01;
+
+        s3.w0StartRow -= s3.FB12;
+        s3.w1StartRow -= s3.FB20;
+        s3.w2StartRow -= s3.FB01;
+
+        s4.w0StartRow -= s4.FB12;
+        s4.w1StartRow -= s4.FB20;
+        s4.w2StartRow -= s4.FB01;
+
     }
 }

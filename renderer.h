@@ -29,6 +29,11 @@ struct RenderContext
     SDL_Surface* surface;
 };
 
+//4xmsaa
+static const uint8_t sampleCount = 4;
+static const int8_t sampleLocX[sampleCount] = {6, -2, -6, 2};
+static const int8_t sampleLocY[sampleCount] = {2, 6, -2, -6};
+
 struct Transform
 {
     Quat rotate;
