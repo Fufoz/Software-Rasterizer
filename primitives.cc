@@ -231,6 +231,14 @@ SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, 
 	return info;
 }
 
+enum CoverageMaskFlagBits
+{
+    COVERAGE_LEFT_TOP      = 1 << 0,
+    COVERAGE_RIGHT_TOP     = 1 << 1,
+    COVERAGE_LEFT_BOTTOM   = 1 << 2,
+    COVERAGE_RIGHT_BOTTOM  = 1 << 3
+};
+
 void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
     float* zBuffer = context->rtargets.zBuffer;
@@ -321,7 +329,21 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
         int w2s4 = s4.w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
+            int coverageMask = 0;
 			//proper fill rule handling is too time consuming in tight rasterizer loops
+            if((w0s1|w1s1|w2s1) >= 0) {
+                coverageMask |= COVERAGE_RIGHT_TOP; 
+            }
+            if((w0s2|w1s2|w2s2) >= 0) {
+                coverageMask |= COVERAGE_LEFT_TOP; 
+            }
+            if((w0s3|w1s3|w2s3) >= 0) {
+                coverageMask |= COVERAGE_LEFT_BOTTOM; 
+            }
+            if((w0s4|w1s4|w2s4) >= 0) {
+                coverageMask |= COVERAGE_RIGHT_BOTTOM;
+            }
+
             if( w0>=0 && w1 >=0 && w2>=0) {              
                 //we're basically interpolating depth values in camera space
                 //to get perspective correct interpolation
