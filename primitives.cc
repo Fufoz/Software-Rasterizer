@@ -305,7 +305,8 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
 	SampleRastInfo s2 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[1], sampleLocY[1]);
 	SampleRastInfo s3 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[2], sampleLocY[2]);
 	SampleRastInfo s4 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[3], sampleLocY[3]);
-
+    int stride = 4;
+    
     for(int y = topY; y > botY; y--) {
 
         int w0 = w0StartRow;
@@ -330,34 +331,56 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
 
         for(int x = leftX; x <= rightX; x++) {
             int coverageMask = 0;
-			//proper fill rule handling is too time consuming in tight rasterizer loops
+
+            //perform depth and coverage test for each subsample
             if((w0s1|w1s1|w2s1) >= 0) {
-                coverageMask |= COVERAGE_RIGHT_TOP; 
+                coverageMask |= COVERAGE_RIGHT_TOP;
+                float zs1 = z0Inv + (w1s1 / 16.f) * Z1Z0Inv + (w2s1 / 16.f) * Z2Z0Inv;
+                if(zs1 < zBuffer[(y * surface->w + x) * stride]) {
+                    zBuffer[(y * surface->w + x) * stride] = zs1;
+                }
             }
             if((w0s2|w1s2|w2s2) >= 0) {
-                coverageMask |= COVERAGE_LEFT_TOP; 
+                coverageMask |= COVERAGE_LEFT_TOP;
+                float zs2 = z0Inv + (w1s2 / 16.f) * Z1Z0Inv + (w2s2 / 16.f) * Z2Z0Inv;
+                if(zs2 < zBuffer[(y * surface->w + x) * stride + 1]) {
+                    zBuffer[(y * surface->w + x) * stride + 1] = zs2;
+                }
             }
             if((w0s3|w1s3|w2s3) >= 0) {
-                coverageMask |= COVERAGE_LEFT_BOTTOM; 
+                coverageMask |= COVERAGE_LEFT_BOTTOM;
+                float zs3 = z0Inv + (w1s3 / 16.f) * Z1Z0Inv + (w2s3 / 16.f) * Z2Z0Inv;
+                if(zs3 < zBuffer[(y * surface->w + x) * stride + 2]) {
+                    zBuffer[(y * surface->w + x) * stride + 2] = zs3;
+                }
             }
             if((w0s4|w1s4|w2s4) >= 0) {
                 coverageMask |= COVERAGE_RIGHT_BOTTOM;
+                float zs4 = z0Inv + (w1s4 / 16.f) * Z1Z0Inv + (w2s4 / 16.f) * Z2Z0Inv;
+                if(zs4 < zBuffer[(y * surface->w + x) * stride + 3]) {
+                    zBuffer[(y * surface->w + x) * stride + 3] = zs4;
+                }
             }
 
-            if( w0>=0 && w1 >=0 && w2>=0) {              
-                //we're basically interpolating depth values in camera space
-                //to get perspective correct interpolation
+            if(coverageMask) {          
                 float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
-                //to get back to screen space
                 Z = 1.f / Z;
-                if( Z < zBuffer[y * surface->w + x]) {
-                    zBuffer[y * surface->w + x] = Z;
-                    Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
-                    discardFragment = false;
-                    Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
-                    if(!discardFragment)
-                        drawPixel(surface, x, y, finalColor);
-                }
+                Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
+                discardFragment = false;
+                Vec3 pixelColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
+                //here will be intensity determination logic
+                uint8_t contrib[4] = {
+                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
+                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
+                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
+                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0
+                };
+
+                Vec3 finalColor = (contrib[0] * pixelColor + contrib[1] * pixelColor
+                    + contrib[2] * pixelColor + contrib[3] * pixelColor) / sampleCount;
+
+                if(!discardFragment)
+                    drawPixel(surface, x, y, finalColor);
             }
 			
             w0 += FA12;

@@ -192,7 +192,7 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 			if( isInsideViewFrustum(out.v1.pos) &&
 				isInsideViewFrustum(out.v2.pos) &&
 				isInsideViewFrustum(out.v3.pos)) {
-				drawTriangleHalfSpace(context, out.v1, out.v2, out.v3, shader);
+				drawTriangleHalfSpaceMSAA(context, out.v1, out.v2, out.v3, shader);
 			} else {//else clip polygon
 				ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
 				for(size_t i = 0; i < result.numTriangles; i++) {
@@ -204,7 +204,7 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 					triangle.v1 = shader.vertexShader(triangle.v1, 0);
 					triangle.v2 = shader.vertexShader(triangle.v2, 1);
 					triangle.v3 = shader.vertexShader(triangle.v3, 2);
-					drawTriangleHalfSpace(context, triangle.v1, triangle.v2, triangle.v3, shader);
+					drawTriangleHalfSpaceMSAA(context, triangle.v1, triangle.v2, triangle.v3, shader);
 				}
 			}
 		}//backface cull
