@@ -371,9 +371,9 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                 //here will be intensity determination logic
                 uint8_t contrib[4] = {
                     coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
-                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
-                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
-                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0
+                    coverageMask & COVERAGE_LEFT_TOP ? 1 : 0,
+                    coverageMask & COVERAGE_LEFT_BOTTOM ? 1 : 0,
+                    coverageMask & COVERAGE_RIGHT_BOTTOM ? 1 : 0
                 };
 
                 Vec3 finalColor = (contrib[0] * pixelColor + contrib[1] * pixelColor
