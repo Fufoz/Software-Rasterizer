@@ -19,7 +19,7 @@ struct Window
 struct RenderTargets
 {
     float* zBuffer;
-    uint8_t* cBuffer;
+    Vec3* cBuffer;
 };
 
 struct RenderContext

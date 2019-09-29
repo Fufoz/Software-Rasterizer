@@ -26,9 +26,9 @@ static void clearDepthBuffer(float* zBuffer, uint32_t width, uint32_t height)
 	std::fill(zBuffer, zBuffer + width * height * sampleCount, std::numeric_limits<float>::max());
 }
 
-static void clearColorBuffer(uint8_t* cBuffer, uint32_t width, uint32_t height)
+static void clearColorBuffer(Vec3* cBuffer, uint32_t width, uint32_t height)
 {
-	memset(cBuffer, 0, width * height * sampleCount * 3);
+	std::fill(cBuffer, cBuffer + width * height * sampleCount, clearColor.xyz);
 }
 
 bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t width, uint32_t height)
@@ -68,7 +68,7 @@ bool createSoftwareRenderer(RenderContext* context, const char* title, uint32_t 
 	if(!ptr)
 		return false;
 
-	uint8_t* cptr = (uint8_t*)malloc(width * height * sampleCount * 3);//3 as 3 color channels
+	Vec3* cptr = (Vec3*)malloc(width * height * sizeof(Vec3) * sampleCount);//3 as 3 color channels
 	if(!cptr)
 		return false;
 
@@ -96,7 +96,7 @@ void beginFrame(RenderContext* context)
 		free(context->rtargets.zBuffer);
 		free(context->rtargets.cBuffer);
 		float* ptr = (float*)malloc(context->window.width * context->window.height * sizeof(float) * sampleCount);
-		uint8_t* cptr = (uint8_t*)malloc(context->window.width * context->window.height * sampleCount * 3);//3 as 3 color channels
+		Vec3* cptr = (Vec3*)malloc(context->window.width * context->window.height * sizeof(Vec3) * sampleCount);//3 as 3 color channels
 		assert(ptr);
 		assert(cptr);
 		context->rtargets.zBuffer = ptr;
@@ -192,7 +192,10 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 			if( isInsideViewFrustum(out.v1.pos) &&
 				isInsideViewFrustum(out.v2.pos) &&
 				isInsideViewFrustum(out.v3.pos)) {
-				drawTriangleHalfSpaceMSAA(context, out.v1, out.v2, out.v3, shader);
+				if(isKeyPressed(BTN_G))
+					drawTriangleHalfSpaceMSAA(context, out.v1, out.v2, out.v3, shader);
+				else
+					drawTriangleHalfSpace(context, out.v1, out.v2, out.v3, shader);
 			} else {//else clip polygon
 				ClippResult result = clipTriangle(out.v1, out.v2, out.v3);
 				for(size_t i = 0; i < result.numTriangles; i++) {
@@ -204,7 +207,10 @@ void renderObject(RenderContext* context, const RenderObject& object, const Came
 					triangle.v1 = shader.vertexShader(triangle.v1, 0);
 					triangle.v2 = shader.vertexShader(triangle.v2, 1);
 					triangle.v3 = shader.vertexShader(triangle.v3, 2);
-					drawTriangleHalfSpaceMSAA(context, triangle.v1, triangle.v2, triangle.v3, shader);
+					if(isKeyPressed(BTN_G))
+						drawTriangleHalfSpaceMSAA(context, triangle.v1, triangle.v2, triangle.v3, shader);
+					else
+						drawTriangleHalfSpace(context, triangle.v1, triangle.v2, triangle.v3, shader);
 				}
 			}
 		}//backface cull

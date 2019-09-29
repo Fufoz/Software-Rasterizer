@@ -122,8 +122,13 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
 	int w1StartRow = (x0 - x2) * (ftopY - y2) - (fleftX - x2) * (y0 - y2);
 	int w2StartRow = (x1 - x0) * (ftopY - y0) - (fleftX - x0) * (y1 - y0);
 
-    bool discardFragment = false;
+    //if(A01 < 0 || (A01 == 0 && B01 > 0)) C1++;
+//
+    //if(DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
+//
+    //if(DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
 
+    bool discardFragment = false;
     for(int y = topY; y > botY; y--) {
 
         int w0 = w0StartRow;
@@ -132,7 +137,7 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
 
         for(int x = leftX; x <= rightX; x++) {
 			//proper fill rule handling is too time consuming in tight rasterizer loops
-            if( w0>=0 && w1 >=0 && w2>=0) {              
+            if( (w0|w1|w2)>=0) {              
                 //we're basically interpolating depth values in camera space
                 //to get perspective correct interpolation
                 float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
@@ -159,6 +164,16 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
     }
 }
 
+
+enum CoverageMaskFlagBits
+{
+    COVERAGE_RIGHT_TOP     = 1 << 0,
+    COVERAGE_LEFT_TOP      = 1 << 1,
+    COVERAGE_LEFT_BOTTOM   = 1 << 2,
+    COVERAGE_RIGHT_BOTTOM  = 1 << 3,
+    COVERAGE_FULL          = 0xf
+};
+
 struct SampleRastInfo
 {
 	float w0StartRow;
@@ -184,16 +199,11 @@ SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, 
 	int y2 = std::floor(16.f * v2.y + 0.5f) + sY;
 
     //compute triangle bounding box
-    int topY   = min((max(max(y0, y1), y2)), context->window.height - 1);
-    int leftX  = max((min(min(x0, x1), x2)), 0);
-    int botY   = max((min(min(y0, y1), y2)), 0);
-    int rightX = min((max(max(x0, x1), x2)), context->window.width - 1);
+    int topY   = min((int)((max(max(y0, y1), y2))/16.f), context->window.height - 1);
+    int leftX  = max((int)((min(min(x0, x1), x2))/16.f), 0);
+    int botY   = max((int)((min(min(y0, y1), y2))/16.f), 0);
+    int rightX = min((int)((max(max(x0, x1), x2))/16.f), context->window.width - 1);
 	
-	topY /= 16.f;
-	leftX /= 16.f;
-	botY /= 16.f;
-	rightX /= 16.f;
-
     //calculate row and column step in barycentric coordinates
     int A01 = y0 - y1;
     int B01 = x1 - x0;
@@ -231,17 +241,11 @@ SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, 
 	return info;
 }
 
-enum CoverageMaskFlagBits
-{
-    COVERAGE_LEFT_TOP      = 1 << 0,
-    COVERAGE_RIGHT_TOP     = 1 << 1,
-    COVERAGE_LEFT_BOTTOM   = 1 << 2,
-    COVERAGE_RIGHT_BOTTOM  = 1 << 3
-};
-
 void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
     float* zBuffer = context->rtargets.zBuffer;
+    Vec3* cBuffer = context->rtargets.cBuffer;
+
     SDL_Surface* surface = context->surface;
        
     //preserve depth of a polygon via keeping its z coordinate in clip-space
@@ -334,53 +338,68 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
 
             //perform depth and coverage test for each subsample
             if((w0s1|w1s1|w2s1) >= 0) {
-                coverageMask |= COVERAGE_RIGHT_TOP;
-                float zs1 = z0Inv + (w1s1 / 16.f) * Z1Z0Inv + (w2s1 / 16.f) * Z2Z0Inv;
+                float zs1 = z0Inv + (w1s1 / 256.f) * Z1Z0Inv + (w2s1 / 256.f) * Z2Z0Inv;
+                zs1 = 1.f / zs1;
                 if(zs1 < zBuffer[(y * surface->w + x) * stride]) {
+                    coverageMask |= COVERAGE_RIGHT_TOP;
                     zBuffer[(y * surface->w + x) * stride] = zs1;
                 }
             }
             if((w0s2|w1s2|w2s2) >= 0) {
-                coverageMask |= COVERAGE_LEFT_TOP;
-                float zs2 = z0Inv + (w1s2 / 16.f) * Z1Z0Inv + (w2s2 / 16.f) * Z2Z0Inv;
+                float zs2 = z0Inv + (w1s2 / 256.f) * Z1Z0Inv + (w2s2 / 256.f) * Z2Z0Inv;
+                zs2 = 1.f / zs2;
                 if(zs2 < zBuffer[(y * surface->w + x) * stride + 1]) {
+                    coverageMask |= COVERAGE_LEFT_TOP;
                     zBuffer[(y * surface->w + x) * stride + 1] = zs2;
                 }
             }
             if((w0s3|w1s3|w2s3) >= 0) {
-                coverageMask |= COVERAGE_LEFT_BOTTOM;
-                float zs3 = z0Inv + (w1s3 / 16.f) * Z1Z0Inv + (w2s3 / 16.f) * Z2Z0Inv;
+                float zs3 = z0Inv + (w1s3 / 256.f) * Z1Z0Inv + (w2s3 / 256.f) * Z2Z0Inv;
+                zs3 = 1.f / zs3;
                 if(zs3 < zBuffer[(y * surface->w + x) * stride + 2]) {
+                    coverageMask |= COVERAGE_LEFT_BOTTOM;
                     zBuffer[(y * surface->w + x) * stride + 2] = zs3;
                 }
             }
             if((w0s4|w1s4|w2s4) >= 0) {
-                coverageMask |= COVERAGE_RIGHT_BOTTOM;
-                float zs4 = z0Inv + (w1s4 / 16.f) * Z1Z0Inv + (w2s4 / 16.f) * Z2Z0Inv;
+                float zs4 = z0Inv + (w1s4 / 256.f) * Z1Z0Inv + (w2s4 / 256.f) * Z2Z0Inv;
+                zs4 = 1.f / zs4;
                 if(zs4 < zBuffer[(y * surface->w + x) * stride + 3]) {
+                    coverageMask |= COVERAGE_RIGHT_BOTTOM;
                     zBuffer[(y * surface->w + x) * stride + 3] = zs4;
                 }
             }
 
-            if(coverageMask) {          
+            if(coverageMask) {  
+//if((w0|w1|w2)>=0){
+
                 float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
                 Z = 1.f / Z;
                 Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
                 discardFragment = false;
                 Vec3 pixelColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
-                //here will be intensity determination logic
-                uint8_t contrib[4] = {
-                    coverageMask & COVERAGE_RIGHT_TOP ? 1 : 0,
-                    coverageMask & COVERAGE_LEFT_TOP ? 1 : 0,
-                    coverageMask & COVERAGE_LEFT_BOTTOM ? 1 : 0,
-                    coverageMask & COVERAGE_RIGHT_BOTTOM ? 1 : 0
-                };
+                Vec3 sampleColors[4];
 
-                Vec3 finalColor = (contrib[0] * pixelColor + contrib[1] * pixelColor
-                    + contrib[2] * pixelColor + contrib[3] * pixelColor) / sampleCount;
+                sampleColors[0] = coverageMask & COVERAGE_RIGHT_TOP ? pixelColor :
+                    cBuffer[(y * surface->w + x) * stride];
+                sampleColors[1] = coverageMask & COVERAGE_LEFT_TOP ? pixelColor :
+                    cBuffer[(y * surface->w + x) * stride + 1];
+                sampleColors[2] = coverageMask & COVERAGE_LEFT_BOTTOM ? pixelColor :
+                    cBuffer[(y * surface->w + x) * stride + 2];
+                sampleColors[3] = coverageMask & COVERAGE_RIGHT_BOTTOM ? pixelColor :
+                    cBuffer[(y * surface->w + x) * stride + 3];
+                pixelColor = (sampleColors[0] + sampleColors[1] + sampleColors[2] + sampleColors[3]) / sampleCount;
 
+                cBuffer[(y * surface->w + x) * stride] = sampleColors[0];
+                cBuffer[(y * surface->w + x) * stride + 1] = sampleColors[1];
+                cBuffer[(y * surface->w + x) * stride + 2] = sampleColors[2];
+                cBuffer[(y * surface->w + x) * stride + 3] = sampleColors[3];
+                if(pixelColor == clearColor.xyz) {
+                    printf("STOOOOOOOOOOP\n");
+                }
                 if(!discardFragment)
-                    drawPixel(surface, x, y, finalColor);
+                    drawPixel(surface, x, y, pixelColor);
+
             }
 			
             w0 += FA12;

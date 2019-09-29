@@ -266,7 +266,10 @@ inline Vec3& operator-=(Vec3& self, const Vec3& other)
     self = self - other;
     return self;
 }
-
+inline bool operator==(Vec3& self, const Vec3& other)
+{
+    return self.x == other.x && self.y == other.y && self.z == other.z;
+}
 inline Vec3 operator*(float scalar,const Vec3& other)
 {
     return Vec3{scalar * other.x, scalar * other.y, scalar * other.z};
