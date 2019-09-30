@@ -122,11 +122,15 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
 	int w1StartRow = (x0 - x2) * (ftopY - y2) - (fleftX - x2) * (y0 - y2);
 	int w2StartRow = (x1 - x0) * (ftopY - y0) - (fleftX - x0) * (y1 - y0);
 
-    //if(A01 < 0 || (A01 == 0 && B01 > 0)) C1++;
-//
-    //if(DY23 < 0 || (DY23 == 0 && DX23 > 0)) C2++;
-//
-    //if(DY31 < 0 || (DY31 == 0 && DX31 > 0)) C3++;
+	auto isTopLeft = [](int x1, int y1, int x2, int y2) {
+		//left/top edge
+		return (y1 == y2 && ((x1 - x2) > 0) ) || ((y2 - y1) < 0);
+	};
+
+	//fill rule
+	w0StartRow = isTopLeft(x1,y1,x2,y2) ? ++w0StartRow : w0StartRow;
+	w1StartRow = isTopLeft(x2,y2,x0,y0) ? ++w1StartRow : w1StartRow;
+	w2StartRow = isTopLeft(x0,y0,x1,y1) ? ++w2StartRow : w2StartRow;
 
     bool discardFragment = false;
     for(int y = topY; y > botY; y--) {
@@ -136,16 +140,13 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
         int w2 = w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
-			//proper fill rule handling is too time consuming in tight rasterizer loops
-            if( (w0|w1|w2)>=0) {              
-                //we're basically interpolating depth values in camera space
-                //to get perspective correct interpolation
-                float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
-                //to get back to screen space
+			
+            if(w0>0 && w1>0 && w2>0) {
+                float Z = z0Inv + (w1/256.f) * Z1Z0Inv + (w2/256.f) * Z2Z0Inv;
                 Z = 1.f / Z;
                 if( Z < zBuffer[y * surface->w + x]) {
                     zBuffer[y * surface->w + x] = Z;
-                    Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
+                    Vec3 gl_pixelCoord = {w1/256.f, w2/256.f, Z};
                     discardFragment = false;
                     Vec3 finalColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
                     if(!discardFragment)
@@ -167,6 +168,7 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
 
 enum CoverageMaskFlagBits
 {
+	COVERAGE_NONE          = 0 << 0,
     COVERAGE_RIGHT_TOP     = 1 << 0,
     COVERAGE_LEFT_TOP      = 1 << 1,
     COVERAGE_LEFT_BOTTOM   = 1 << 2,
@@ -228,6 +230,17 @@ SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, 
 	int w1StartRow = (x0 - x2) * (ftopY - y2) - (fleftX - x2) * (y0 - y2);
 	int w2StartRow = (x1 - x0) * (ftopY - y0) - (fleftX - x0) * (y1 - y0);
 	
+	auto isTopLeft = [](int x1, int y1, int x2, int y2) {
+		//left/top edge
+		return (y1 == y2 && ((x1 - x2) > 0) ) || ((y2 - y1) < 0);
+	};
+
+	//fill rule
+	w0StartRow = isTopLeft(x1,y1,x2,y2) ? ++w0StartRow : w0StartRow;
+	w1StartRow = isTopLeft(x2,y2,x0,y0) ? ++w1StartRow : w1StartRow;
+	w2StartRow = isTopLeft(x0,y0,x1,y1) ? ++w2StartRow : w2StartRow;
+
+
 	info.w0StartRow = w0StartRow;
 	info.w1StartRow = w1StartRow;
 	info.w2StartRow = w2StartRow;
@@ -334,10 +347,10 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
         int w2s4 = s4.w2StartRow;
 
         for(int x = leftX; x <= rightX; x++) {
-            int coverageMask = 0;
+            int coverageMask = COVERAGE_NONE;
 
             //perform depth and coverage test for each subsample
-            if((w0s1|w1s1|w2s1) >= 0) {
+            if(w0s1 > 0 && w1s1 > 0 && w2s1 > 0) {
                 float zs1 = z0Inv + (w1s1 / 256.f) * Z1Z0Inv + (w2s1 / 256.f) * Z2Z0Inv;
                 zs1 = 1.f / zs1;
                 if(zs1 < zBuffer[(y * surface->w + x) * stride]) {
@@ -345,7 +358,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                     zBuffer[(y * surface->w + x) * stride] = zs1;
                 }
             }
-            if((w0s2|w1s2|w2s2) >= 0) {
+            if(w0s2>0 && w1s2>0 && w2s2>0) {
                 float zs2 = z0Inv + (w1s2 / 256.f) * Z1Z0Inv + (w2s2 / 256.f) * Z2Z0Inv;
                 zs2 = 1.f / zs2;
                 if(zs2 < zBuffer[(y * surface->w + x) * stride + 1]) {
@@ -353,7 +366,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                     zBuffer[(y * surface->w + x) * stride + 1] = zs2;
                 }
             }
-            if((w0s3|w1s3|w2s3) >= 0) {
+            if(w0s3>0 && w1s3>0 && w2s3>0) {
                 float zs3 = z0Inv + (w1s3 / 256.f) * Z1Z0Inv + (w2s3 / 256.f) * Z2Z0Inv;
                 zs3 = 1.f / zs3;
                 if(zs3 < zBuffer[(y * surface->w + x) * stride + 2]) {
@@ -361,7 +374,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                     zBuffer[(y * surface->w + x) * stride + 2] = zs3;
                 }
             }
-            if((w0s4|w1s4|w2s4) >= 0) {
+            if(w0s4>0 && w1s4>0 && w2s4>0) {
                 float zs4 = z0Inv + (w1s4 / 256.f) * Z1Z0Inv + (w2s4 / 256.f) * Z2Z0Inv;
                 zs4 = 1.f / zs4;
                 if(zs4 < zBuffer[(y * surface->w + x) * stride + 3]) {
@@ -371,14 +384,13 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
             }
 
             if(coverageMask) {  
-//if((w0|w1|w2)>=0){
 
                 float Z = z0Inv + (w1 >> 8) * Z1Z0Inv + (w2 >> 8) * Z2Z0Inv;
                 Z = 1.f / Z;
                 Vec3 gl_pixelCoord = {w1>>8, w2>>8, Z};
                 discardFragment = false;
                 Vec3 pixelColor = shader.fragmentShader(gl_pixelCoord, discardFragment);
-                Vec3 sampleColors[4];
+                Vec3 sampleColors[4] = {};
 
                 sampleColors[0] = coverageMask & COVERAGE_RIGHT_TOP ? pixelColor :
                     cBuffer[(y * surface->w + x) * stride];
@@ -394,9 +406,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                 cBuffer[(y * surface->w + x) * stride + 1] = sampleColors[1];
                 cBuffer[(y * surface->w + x) * stride + 2] = sampleColors[2];
                 cBuffer[(y * surface->w + x) * stride + 3] = sampleColors[3];
-                if(pixelColor == clearColor.xyz) {
-                    printf("STOOOOOOOOOOP\n");
-                }
+                
                 if(!discardFragment)
                     drawPixel(surface, x, y, pixelColor);
 
