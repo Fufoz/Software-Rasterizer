@@ -187,11 +187,16 @@ struct SampleRastInfo
 	int FB12;
 	int FA20;
 	int FB20;
+	int topY;
+	int leftX;
+	int botY;
+	int rightX;
 };
 
-SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, uint8_t sX, uint8_t sY)
+SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, int sX, int sY)
 {
 	SampleRastInfo info = {};
+	printf("%d %d\n",sX,sY);
 	//28.4 fixed format
 	int x0 = std::floor(16.f * v0.x + 0.5f) + sX;
 	int x1 = std::floor(16.f * v1.x + 0.5f) + sX;
@@ -250,6 +255,10 @@ SampleRastInfo prepareSample(RenderContext* context, Vec3 v0, Vec3 v1, Vec3 v2, 
 	info.FB12 = FB12;
 	info.FA20 = FA20;
 	info.FB20 = FB20;
+	info.topY = topY;
+	info.leftX = leftX;
+	info.botY = botY;
+	info.rightX = rightX;
 
 	return info;
 }
@@ -323,8 +332,9 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
 	SampleRastInfo s3 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[2], sampleLocY[2]);
 	SampleRastInfo s4 = prepareSample(context, v0.pos.xyz, v1.pos.xyz, v2.pos.xyz, sampleLocX[3], sampleLocY[3]);
     int stride = 4;
-    
-    for(int y = topY; y > botY; y--) {
+	assert(s2.topY >= s4.botY);
+	assert(s3.leftX <= s1.rightX);
+    for(int y = s2.topY; y >= s4.botY; y--) {
 
         int w0 = w0StartRow;
         int w1 = w1StartRow;
@@ -346,7 +356,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
         int w1s4 = s4.w1StartRow;
         int w2s4 = s4.w2StartRow;
 
-        for(int x = leftX; x <= rightX; x++) {
+        for(int x = s3.leftX; x <= s1.rightX; x++) {
             int coverageMask = COVERAGE_NONE;
 
             //perform depth and coverage test for each subsample

@@ -67,7 +67,7 @@ int main(int argc, char **argv)
             renderObject(&ctx, monkey3, camera, pshader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
-        printf("Frame took %.2f[ms] \n",deltaTime);
+        //printf("Frame took %.2f[ms] \n",deltaTime);
     }
 
     destroySoftwareRenderer(&ctx);
