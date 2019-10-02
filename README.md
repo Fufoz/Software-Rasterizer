@@ -20,11 +20,10 @@ cmake -BBuild -H. -DCMAKE_INSTALL_PREFIX=./
 ```
 This will create bin direcroty with all examples inside.
 
-Note :> for Windows platform you also need to pass Visual Studio  generator to cmake like so:  -G"Visual Studio 15 2017 Win64".
+Note > for Windows platform you also need to pass Visual Studio generator to cmake, for example (-G"Visual Studio 15 2017 Win64").
 
-## Run
+## Running examples
 Run Every demo app from root directory like so
 ```
     <demo_install_prefix>\bin\<demo_name>.exe
 ```
-This way all resources will be properly loaded by the demo.
