@@ -9,8 +9,15 @@ At the moment the following things are implemented:
  * Flat/Gouraud/Phong shading models
  * Multisample anti-aliasing (4xmsaa)
 
+## ScreenShots
+Here are some screenshots from some of my demos
+
+![shadingModels](https://user-images.githubusercontent.com/30685457/66068443-48a17600-e556-11e9-89a2-858ecb7b0a0a.png)
+
+
+
 ## Build instructions(from root directory)
-In order to build renderer library and examples you need to
+In order to build renderer and examples you need to
 pass the following flags to cmake:
 
 ```
@@ -23,7 +30,8 @@ This will create bin direcroty with all examples inside.
 Note > for Windows platform you also need to pass Visual Studio generator to cmake, for example (-G"Visual Studio 15 2017 Win64").
 
 ## Running examples
-Run Every demo app from root directory like so
+After examples are built you can run them from the project's root directory like so:
+
 ```
     <demo_install_prefix>\bin\<demo_name>.exe
 ```
