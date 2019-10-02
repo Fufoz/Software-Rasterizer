@@ -7,5 +7,5 @@ At the moment the following things are implemented:
  * Normal mapping
  * Parallax occlusion mapping
  * Flat/Gouraud/Phong shading models
- * Multisample antialiasing (4xmsaa)
+ * Multisample anti-aliasing (4xmsaa)
 
