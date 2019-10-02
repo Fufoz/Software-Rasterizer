@@ -19,7 +19,7 @@ struct Window
 struct RenderTargets
 {
     float* zBuffer;
-    uint8_t* cBuffer;
+    Vec3* cBuffer;
 };
 
 struct RenderContext
@@ -28,6 +28,11 @@ struct RenderContext
     RenderTargets rtargets;
     SDL_Surface* surface;
 };
+
+//4xmsaa
+static const uint8_t sampleCount = 4;
+static const int8_t sampleLocX[sampleCount] = {6, -2, -6, 2};
+static const int8_t sampleLocY[sampleCount] = {2, 6, -2, -6};
 
 struct Transform
 {

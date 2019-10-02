@@ -66,7 +66,7 @@ int main(int argc, char **argv)
             renderObject(&ctx, cube1, camera, shader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
-        //printf("Frame took %.2f[ms] \n",deltaTime);
+        printf("Frame took %.2f[ms] \n",deltaTime);
     }
 
     unloadTexture(cubeTexture.data);

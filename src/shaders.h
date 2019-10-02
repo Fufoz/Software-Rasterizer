@@ -64,7 +64,7 @@ struct FlatShader : Shader
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {
         Vec3 gl_fragColor = uniforms.in_flatColor * uniforms.in_lightIntensity;        
-        return gl_fragColor;
+        return  clamp(gl_fragColor, RGB_BLACK, RGB_WHITE);
     }
 
       void prepareInterpolants(
@@ -107,7 +107,7 @@ struct GouraudShader : Shader
     Vec3 fragmentShader(const Vec3& pixelCoords, bool& discard)
     {        
         Vec3 gl_fragColor = (color[0] + pixelCoords.u * C1C0 + pixelCoords.v * C2C0) * pixelCoords.z; 
-        return gl_fragColor;
+        return  clamp(gl_fragColor, RGB_BLACK, RGB_WHITE);
     }
 
     void prepareInterpolants(
