@@ -11,10 +11,11 @@ At the moment the following things are implemented:
 
 ## ScreenShots
 Here are some screenshots from some of my demos
-
+Shading Models:
 ![shadingModels](https://user-images.githubusercontent.com/30685457/66068443-48a17600-e556-11e9-89a2-858ecb7b0a0a.png)
 
-
+Parallax mapping:
+![parallax](https://user-images.githubusercontent.com/30685457/66069307-c4e88900-e557-11e9-8e00-4b32d2780758.png)
 
 ## Build instructions(from root directory)
 In order to build renderer and examples you need to
