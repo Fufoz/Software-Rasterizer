@@ -1,5 +1,5 @@
-# Software renderer
-This is a simple software renderer implementation written from scratch for educational purposes.
+# Softy
+Softy is a software renderer implementation written from scratch simply for educational purposes.
 
 ## Things implemented
 At the moment the following things are implemented:
@@ -8,3 +8,4 @@ At the moment the following things are implemented:
  * Parallax occlusion mapping
  * Flat/Gouraud/Phong shading models
  * Multisample antialiasing (4xmsaa)
+

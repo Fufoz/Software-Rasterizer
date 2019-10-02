@@ -3,8 +3,8 @@
 #include "maths.h"
 #include "renderer.h"
 
-#define MAX_CLIPPED_TRIANGLE_COUNT 5
-#define MAX_CLIPPED_VERTEX_COUNT 7
+static const int MAX_CLIPPED_TRIANGLE_COUNT = 5;
+static const int MAX_CLIPPED_VERTEX_COUNT = 7;
 
 struct ClippResult
 {

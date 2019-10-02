@@ -11,7 +11,6 @@ find_path(SDL_INCLUDE_DIRS
     NAMES SDL2/SDL.h
     PATHS ${SDL_ROOT}
     HINTS ${SDL_ROOT}/include
-    NO_DEFAULT_PATH
 )
 
 if(NOT CMAKE_BUILD_TYPE)
