@@ -9,5 +9,5 @@ add_library(softy STATIC
     clipper.cc
 )
 
-target_include_directories(softy PUBLIC ${SDL_INCLUDE_DIRS})
+target_include_directories(softy PUBLIC ${SDL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../extern)
 target_link_libraries(softy PUBLIC ${SDL_LIBRARIES})

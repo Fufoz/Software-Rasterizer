@@ -1,18 +1,13 @@
 #include <stdio.h>
 #include <algorithm>
-
 #include <limits>
-#include "obj.h"
-#include "timer.h"
-#include "maths.h"
-#include "input.h"
-#include "renderer.h"
-#include "camera.h"
+
+#include <softy.h>
 
 int main(int argc, char **argv)
 {
     RenderContext ctx = {};
-    if(!createSoftwareRenderer(&ctx,"software renderer", 1080, 720))
+    if(!createSoftwareRenderer(&ctx,"Shading", 1080, 720))
         return -1;
 
     Camera camera = {};
@@ -29,9 +24,6 @@ int main(int argc, char **argv)
 
     averageNormals(&monkeyMesh);
 
-    FlatShader fshader = {};
-    fshader.uniforms.in_flatColor = {255.f,255.f,0.f};
-
     RenderObject monkey1 = {};
     monkey1.mesh = &monkeyMesh;
     monkey1.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
@@ -46,6 +38,9 @@ int main(int argc, char **argv)
     monkey3.mesh = &monkeyMesh;
     monkey3.transform.scale = Vec3{0.5f, 0.5f, 0.5f};
     monkey3.transform.translate = Vec3{1.f, 2.f, -1.f};
+
+    FlatShader fshader = {};
+    fshader.uniforms.in_flatColor = {255.f,255.f,0.f};
 
     GouraudShader gshader = {};
     gshader.uniforms.in_flatColor = {255.f,69.f,0.f};
@@ -67,7 +62,7 @@ int main(int argc, char **argv)
             renderObject(&ctx, monkey3, camera, pshader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
-        //printf("Frame took %.2f[ms] \n",deltaTime);
+        printf("Frame took %.2f[ms] \n", deltaTime);
     }
 
     destroySoftwareRenderer(&ctx);

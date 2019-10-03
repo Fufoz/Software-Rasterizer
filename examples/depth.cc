@@ -1,18 +1,13 @@
 #include <stdio.h>
 #include <algorithm>
-
 #include <limits>
-#include "obj.h"
-#include "timer.h"
-#include "maths.h"
-#include "input.h"
-#include "renderer.h"
-#include "camera.h"
+
+#include <softy.h>
 
 int main(int argc, char **argv)
 {
     RenderContext ctx = {};
-    if(!createSoftwareRenderer(&ctx,"software renderer", 1080, 720))
+    if(!createSoftwareRenderer(&ctx,"Depth Visualisation", 1080, 720))
         return -1;
 
     Camera camera = {};
@@ -64,7 +59,7 @@ int main(int argc, char **argv)
             renderObject(&ctx, plane, camera, shader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
-        printf("Frame took %.2f[ms] \n",deltaTime);
+        printf("Frame took %.2f[ms] \n", deltaTime);
     }
 
     destroySoftwareRenderer(&ctx);

@@ -1,18 +1,13 @@
 #include <stdio.h>
 #include <algorithm>
-
 #include <limits>
-#include "obj.h"
-#include "timer.h"
-#include "maths.h"
-#include "input.h"
-#include "renderer.h"
-#include "camera.h"
+
+#include <softy.h>
 
 int main(int argc, char **argv)
 {
     RenderContext ctx = {};
-    if(!createSoftwareRenderer(&ctx,"software renderer", 640, 480))
+    if(!createSoftwareRenderer(&ctx,"Parallax mapping", 640, 480))
         return -1;
 
     Camera camera;
@@ -66,7 +61,7 @@ int main(int argc, char **argv)
             renderObject(&ctx, cube1, camera, shader);
         endFrame(&ctx);
         deltaTime = tick.stopMs();
-        printf("Frame took %.2f[ms] \n",deltaTime);
+        printf("Frame took %.2f[ms] \n", deltaTime);
     }
 
     unloadTexture(cubeTexture.data);
