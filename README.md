@@ -1,16 +1,16 @@
 # Softy
-Softy is a software renderer implementation written from scratch simply for educational purposes.
+Softy is a simple software renderer implementation written from scratch.
 
 ## Things implemented
 At the moment the following things are implemented:
  * Depth buffer visualisation
- * Normal mapping
+ * Normal/texture mapping
  * Parallax occlusion mapping
  * Flat/Gouraud/Phong shading models
  * Multisample anti-aliasing (4xmsaa)
 
 ## ScreenShots
-Here are some screenshots from some of my demos 
+Here are some screenshots from my demos 
 
 Shading Models:
 
