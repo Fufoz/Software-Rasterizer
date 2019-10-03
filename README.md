@@ -31,7 +31,7 @@ cmake -BBuild -H. -DCMAKE_INSTALL_PREFIX=./
 ```
 This will create bin direcroty with all examples inside.
 
-Note > for Windows platform you also need to pass Visual Studio generator to cmake, for example (-G"Visual Studio 15 2017 Win64").
+> Note that for Windows platform you also need to pass Visual Studio generator to cmake, for example if you have Visual studio 2017 installed you would pass (-G"Visual Studio 15 2017 Win64").
 
 ## Running examples
 After examples are built you can run them from the project's root directory like so:
