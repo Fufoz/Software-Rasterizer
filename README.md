@@ -1,6 +1,5 @@
 # Softy
-Softy is a simple software renderer implementation written from scratch.
-
+Softy is a simple software renderer implementation written from scratch.  
 Since it's my first graphics project the main goal was to learn basic computer graphics algorithms and get familiar with the hardware graphics pipeline.
 
 ## Things implemented
