@@ -1,5 +1,6 @@
 # Softy
 Softy is a simple software renderer implementation written from scratch.
+Since it's my first graphics project the main goal was to learn basic computer graphics algorithms and get familiar with the hardware graphics pipeline.
 
 ## Things implemented
 At the moment the following things are implemented:
@@ -28,7 +29,7 @@ Parallax mapping:
 
 ![parallax](https://user-images.githubusercontent.com/30685457/66069307-c4e88900-e557-11e9-8e00-4b32d2780758.png)
 
-## Build instructions(from root directory)
+## Build instructions(from project root directory)
 In order to build renderer and examples you need to
 pass the following flags to cmake:
 
@@ -48,4 +49,3 @@ After examples are built you can run them from the project's root directory like
     <demo_install_prefix>\bin\<demo_name>.exe
 ```
 ## Papers && Useful links
-Here is the most useful 
