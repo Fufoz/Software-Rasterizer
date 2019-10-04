@@ -10,7 +10,15 @@ At the moment the following things are implemented:
  * Multisample anti-aliasing (4xmsaa)
 
 ## ScreenShots
-Here are some screenshots from my demos 
+Here are some screenshots from my demos
+
+noMsaa/4xmsaa comparisons:
+
+![comparisons](https://user-images.githubusercontent.com/30685457/66235077-ef714800-e6f7-11e9-9116-783feea45ac2.png)
+
+a closer look:
+
+![finale](https://user-images.githubusercontent.com/30685457/66235405-a968b400-e6f8-11e9-9b74-a57a48e3666f.png)
 
 Shading Models:
 
@@ -39,3 +47,5 @@ After examples are built you can run them from the project's root directory like
 ```
     <demo_install_prefix>\bin\<demo_name>.exe
 ```
+## Papers && Useful links
+Here is the most useful 
