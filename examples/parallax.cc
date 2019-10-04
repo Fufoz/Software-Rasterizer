@@ -41,8 +41,6 @@ int main(int argc, char **argv)
     cube1.heightMap = &heightMap;
     cube1.transform.scale = Vec3{0.1f, 0.1f, 0.1f};
     cube1.transform.translate = Vec3{0.f, 0.f, -2.f};
-    cube1.flatColor = {255, 0, 0};
-    cube1.mode = MODE_FLATCOLOR;
 
     BumpShader shader = {};
     shader.sampler2d = &cubeTexture;

@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
     RenderContext ctx = {};
-    if(!createSoftwareRenderer(&ctx,"Shading", 1080, 720))
+    if(!createSoftwareRenderer(&ctx,"Shading", 640, 480))
         return -1;
 
     Camera camera = {};

@@ -9,6 +9,13 @@ mat4x4 viewportTransform = {};
 mat4x4 perspectiveTransform = {};
 Vec4 clearColor = {};
 
+enum SampleCountFlagBits
+{
+	SAMPLE_COUNT_1_BIT = 1 << 0,
+	SAMPLE_COUNT_4_BIT = 1 << 2
+};
+static int sampleCount = SAMPLE_COUNT_4_BIT;
+
 void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear)
 {
 	viewportTransform  = viewport;
@@ -19,6 +26,11 @@ void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4
 bool windowClosed()
 {
 	return isKeyPressed(BTN_ESCAPE);
+}
+
+void enableMultiSampling()
+{
+	sampleCount = SAMPLE_COUNT_4_BIT;
 }
 
 static void clearDepthBuffer(float* zBuffer, uint32_t width, uint32_t height)

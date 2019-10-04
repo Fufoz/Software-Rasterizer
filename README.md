@@ -58,4 +58,6 @@ After examples are built you can run them from the project's root directory like
 * mouse hover - camera orientation
 
 ## Useful links
-* [triangle_rasterization](https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/) - a great article about triangle rasterization using triangle's edge functions
+* [triangle_rasterization](https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/) - a great set of articles by Fabian “ryg” Giesen about triangle rasterization using edge functions
+* [perspective_corrected_interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf) - paper about perspective corrected attribute interpolation
+* [software_renderer_tutorial](https://github.com/ssloy/tinyrenderer/wiki) - a great software rendering tutorial by Dmitry V. Sokolov

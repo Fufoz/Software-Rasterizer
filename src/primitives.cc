@@ -205,7 +205,7 @@ void drawTriangleHalfSpace(RenderContext* context, Vertex v0, Vertex v1, Vertex 
     }
 }
 
-
+//msaa stuff
 enum CoverageMaskFlagBits
 {
 	COVERAGE_NONE          = 0 << 0,
@@ -215,6 +215,9 @@ enum CoverageMaskFlagBits
     COVERAGE_RIGHT_BOTTOM  = 1 << 3,
     COVERAGE_FULL          = 0xf
 };
+
+static const int8_t sampleLocX[4] = {6, -2, -6, 2};
+static const int8_t sampleLocY[4] = {2, 6, -2, -6};
 
 void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Vertex v2, Shader& shader)
 {
@@ -327,7 +330,7 @@ void drawTriangleHalfSpaceMSAA(RenderContext* context, Vertex v0, Vertex v1, Ver
                     cBuffer[(y * surface->w + x) * stride + 2];
                 sampleColors[3] = coverageMask & COVERAGE_RIGHT_BOTTOM ? pixelColor :
                     cBuffer[(y * surface->w + x) * stride + 3];
-                pixelColor = (sampleColors[0] + sampleColors[1] + sampleColors[2] + sampleColors[3]) / sampleCount;
+                pixelColor = (sampleColors[0] + sampleColors[1] + sampleColors[2] + sampleColors[3]) / 4;
 
                 cBuffer[(y * surface->w + x) * stride] = sampleColors[0];
                 cBuffer[(y * surface->w + x) * stride + 1] = sampleColors[1];
