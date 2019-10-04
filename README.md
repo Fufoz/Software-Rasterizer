@@ -48,4 +48,14 @@ After examples are built you can run them from the project's root directory like
 ```
     <demo_install_prefix>\bin\<demo_name>.exe
 ```
-## Papers && Useful links
+### Demo controls
+* W - move forward
+* S - move backward
+* A - strafe left
+* D - strafe right
+* ctl - move down
+* space - move up
+* mouse hover - camera orientation
+
+## Useful links
+* [triangle_rasterization](https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/) - a great article about triangle rasterization using triangle's edge functions
