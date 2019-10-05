@@ -58,6 +58,9 @@ After examples are built you can run them from the project's root directory like
 * mouse hover - camera orientation
 > In all demos you can switch to multisampling mode by holding "G" button
 
+## Credits
+Brick textures were taken from [texture_haven](https://texturehaven.com/tex/?t=rough_block_wall). Author: Rob Tuytel.
+
 ## Useful links
 * [triangle_rasterization](https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/) - a great set of articles by Fabian “ryg” Giesen about triangle rasterization using edge functions
 * [perspective_corrected_interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf) - paper about perspective corrected attribute interpolation
