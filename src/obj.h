@@ -14,7 +14,7 @@ struct Face
 	int64_t nIndex[3];
 	int64_t tanIndex[3];
 };
-
+	
 enum MeshFeatureFlags
 {
 	FEATURE_NONE     = 1 << 0,

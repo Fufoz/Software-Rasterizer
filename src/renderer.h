@@ -11,38 +11,38 @@
 
 struct Window
 {
-    SDL_Window* window;
-    int width;
-    int height;
+	SDL_Window* window;
+	int width;
+	int height;
 };
 
 struct RenderTargets
 {
-    float* zBuffer;
-    Vec3* cBuffer;
+	float* zBuffer;
+	Vec3* cBuffer;
 };
 
 struct RenderContext
 {
-    Window window;
-    RenderTargets rtargets;
-    SDL_Surface* surface;
+	Window window;
+	RenderTargets rtargets;
+	SDL_Surface* surface;
 };
 
 struct Transform
 {
-    Quat rotate;
-    Vec3 scale;
-    Vec3 translate;
+	Quat rotate;
+	Vec3 scale;
+	Vec3 translate;
 };
 
 struct RenderObject
 {
-    Mesh* mesh;
-    Texture* texture;
-    Texture* normalMap;
-    Texture* heightMap;
-    Transform transform;
+	Mesh* mesh;
+	Texture* texture;
+	Texture* normalMap;
+	Texture* heightMap;
+	Transform transform;
 };
 
 //render State
@@ -51,8 +51,6 @@ extern mat4x4 perspectiveTransform;
 extern Vec4 clearColor;
 
 bool windowClosed();
-
-void enableMultiSampling();
 
 void setRenderState(const mat4x4& viewport, const mat4x4 perspective, const Vec4& clear);
 

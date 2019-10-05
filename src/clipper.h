@@ -8,8 +8,8 @@ static const int MAX_CLIPPED_VERTEX_COUNT = 7;
 
 struct ClippResult
 {
-    Triangle triangles[MAX_CLIPPED_TRIANGLE_COUNT];
-    size_t numTriangles;//num vertices - 2
+	Triangle triangles[MAX_CLIPPED_TRIANGLE_COUNT];
+	size_t numTriangles;//num vertices - 2
 };
 
 bool isInsideViewFrustum(const Vec4& pos);

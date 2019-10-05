@@ -28,11 +28,6 @@ bool windowClosed()
 	return isKeyPressed(BTN_ESCAPE);
 }
 
-void enableMultiSampling()
-{
-	sampleCount = SAMPLE_COUNT_4_BIT;
-}
-
 static void clearDepthBuffer(float* zBuffer, uint32_t width, uint32_t height)
 {
 	std::fill(zBuffer, zBuffer + width * height * sampleCount, std::numeric_limits<float>::max());

@@ -5,47 +5,47 @@
 
 bool loadTexture(const char* path, Texture* out, bool flipImage)
 {
-    int twidth;
-    int theight;
-    int numChannels;
+	int twidth;
+	int theight;
+	int numChannels;
 
-    stbi_set_flip_vertically_on_load(flipImage);
-    uint8_t* data = stbi_load(path, &twidth, &theight, &numChannels, 0);
-    
-    if(!data) {
-        printf("Failed to load texture from path %s!\n", path);
-        return false;
-    }
+	stbi_set_flip_vertically_on_load(flipImage);
+	uint8_t* data = stbi_load(path, &twidth, &theight, &numChannels, 0);
+	
+	if(!data) {
+		printf("Failed to load texture from path %s!\n", path);
+		return false;
+	}
 
-    out->width =  twidth;
-    out->height = theight;
-    out->numc = numChannels;
-    out->data = data;
-    out->size = twidth * theight * numChannels;
-    return true; 
+	out->width =  twidth;
+	out->height = theight;
+	out->numc = numChannels;
+	out->data = data;
+	out->size = twidth * theight * numChannels;
+	return true; 
 }
 
 Vec3 sampleTexture3ch(Texture* sampler, Vec2 uvs)
 {
-    if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
-        return Vec3{};
-    int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
-    int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
-    uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
-    return Vec3{(float)pos[0], (float)pos[1], (float)pos[2]};
+	if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
+		return Vec3{};
+	int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
+	int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
+	uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
+	return Vec3{(float)pos[0], (float)pos[1], (float)pos[2]};
 }
 
 uint8_t sampleTexture1ch(Texture* sampler, Vec2 uvs)
 {
-    if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
-        return 0;
-    int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
-    int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
-    uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
-    return pos[0];
+	if(uvs.u > 1 || uvs.u < 0 || uvs.v > 1 || uvs.v < 0)
+		return 0;
+	int xOffset = std::floor(uvs.u * (sampler->width - 1)) * sampler->numc; 
+	int yOffset = std::floor(uvs.v * (sampler->height - 1)) * sampler->numc;
+	uint8_t* pos = sampler->data + xOffset + yOffset * sampler->width;
+	return pos[0];
 }
 
 void unloadTexture(void* handle)
 {
-    stbi_image_free(handle);
+	stbi_image_free(handle);
 }

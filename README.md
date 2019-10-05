@@ -56,6 +56,7 @@ After examples are built you can run them from the project's root directory like
 * ctl - move down
 * space - move up
 * mouse hover - camera orientation
+> In all demos you can switch to multisampling mode by holding "G" button
 
 ## Useful links
 * [triangle_rasterization](https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/) - a great set of articles by Fabian “ryg” Giesen about triangle rasterization using edge functions
