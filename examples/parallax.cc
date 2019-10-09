@@ -63,6 +63,8 @@ int main(int argc, char **argv)
     }
 
     unloadTexture(cubeTexture.data);
+	unloadTexture(normalMap.data);
+	unloadTexture(heightMap.data);
     destroySoftwareRenderer(&ctx);
     return 0;
 }
